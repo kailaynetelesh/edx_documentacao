@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-DX — Documentação Técnica Interna</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+:root{
+  --bg:#0a0d12;
+  --bg-elev:#11151c;
+  --bg-elev-2:#171c25;
+  --border:#232a35;
+  --border-soft:#1a2029;
+  --text:#e7ebf1;
+  --text-dim:#93a0b3;
+  --text-faint:#5c6779;
+  --accent:#5b8cff;
+  --accent-soft:#5b8cff22;
+  --accent-2:#38d0c9;
+  --warn:#e5a94a;
+  --danger:#f16d6d;
+  --ok:#4fd07c;
+  --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  --radius: 8px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.65;
+}
+::selection{background:var(--accent-soft);}
+a{color:var(--accent); text-decoration:none;}
+a:hover{text-decoration:underline;}
+code, pre, .mono{font-family:var(--mono);}
+code{
+  background:var(--bg-elev-2);
+  border:1px solid var(--border-soft);
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:0.85em;
+  color:var(--accent-2);
+}
+pre{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  overflow-x:auto;
+  position:relative;
+}
+pre code{background:none;border:none;padding:0;color:var(--text); font-size:0.85em;}
+.copy-btn{
+  position:absolute; top:8px; right:8px;
+  background:var(--bg-elev-2); border:1px solid var(--border);
+  color:var(--text-dim); font-size:11px; padding:4px 8px; border-radius:6px;
+  cursor:pointer; font-family:var(--sans);
+}
+.copy-btn:hover{color:var(--text); border-color:var(--accent);}
+
+/* Layout */
+.app{display:flex; min-height:100vh;}
+.sidebar{
+  width:280px; flex:none;
+  border-right:1px solid var(--border);
+  background:var(--bg-elev);
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  padding:18px 14px 60px;
+  transition:margin-left .2s ease, opacity .2s ease;
+}
+.sidebar.collapsed{margin-left:-280px; opacity:0;}
+.brand{display:flex; align-items:center; gap:10px; padding:4px 8px 16px; border-bottom:1px solid var(--border-soft); margin-bottom:14px;}
+.brand-badge{
+  width:30px;height:30px;border-radius:7px;
+  background:linear-gradient(135deg, var(--accent), var(--accent-2));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700; font-size:13px; color:#0a0d12; font-family:var(--mono);
+}
+.brand-text b{display:block; font-size:14px;}
+.brand-text span{display:block; font-size:11px; color:var(--text-faint);}
+
+.searchbox{position:relative; margin-bottom:14px;}
+.searchbox input{
+  width:100%; background:var(--bg-elev-2); border:1px solid var(--border);
+  color:var(--text); padding:8px 10px 8px 30px; border-radius:6px; font-size:13px;
+  font-family:var(--sans);
+}
+.searchbox input:focus{outline:none; border-color:var(--accent);}
+.searchbox::before{content:"⌕"; position:absolute; left:9px; top:6px; color:var(--text-faint); font-size:15px;}
+
+.navgroup{margin-bottom:4px;}
+.navgroup-title{
+  font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--text-faint); padding:14px 8px 6px; font-weight:600;
+}
+.navlink{
+  display:flex; align-items:center; gap:8px;
+  padding:6px 8px; border-radius:6px; font-size:13.5px; color:var(--text-dim);
+  cursor:pointer; white-space:nowrap;
+}
+.navlink:hover{background:var(--bg-elev-2); color:var(--text); text-decoration:none;}
+.navlink.active{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+.navlink .tag{
+  margin-left:auto; font-size:9.5px; padding:1px 6px; border-radius:20px; font-family:var(--mono);
+  border:1px solid var(--border);
+}
+.tag.done{color:var(--ok); border-color:#4fd07c44;}
+.tag.pending{color:var(--text-faint); border-color:var(--border);}
+.tag.next{color:var(--warn); border-color:#e5a94a44;}
+
+.main{flex:1; min-width:0; display:flex; justify-content:center;}
+.content{max-width:900px; width:100%; padding:40px 48px 120px;}
+.topbar{
+  position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:14px;
+  background:rgba(10,13,18,.85); backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--border); padding:12px 24px; margin:-1px -1px 0;
+}
+.burger{
+  cursor:pointer; background:var(--bg-elev-2); border:1px solid var(--border);
+  color:var(--text-dim); width:30px; height:30px; border-radius:6px; font-size:14px;
+}
+.breadcrumb{font-size:12.5px; color:var(--text-faint);}
+.breadcrumb b{color:var(--text-dim); font-weight:500;}
+
+section{padding-top:56px; margin-top:-56px;}
+h1{font-size:30px; margin:0 0 6px; letter-spacing:-.02em;}
+h2{font-size:22px; margin:48px 0 14px; letter-spacing:-.01em; border-top:1px solid var(--border-soft); padding-top:36px;}
+section:first-of-type h2:first-of-type, h1 + h2{border-top:none; padding-top:0;}
+h3{font-size:17px; margin:28px 0 10px; color:var(--text);}
+h4{font-size:14px; margin:20px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.04em;}
+p{color:var(--text-dim); margin:10px 0;}
+p b, li b{color:var(--text);}
+.lede{font-size:16px; color:var(--text-dim); margin-bottom:6px;}
+
+.badge-row{display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 22px;}
+.pill{
+  font-size:11.5px; padding:3px 10px; border-radius:20px; border:1px solid var(--border);
+  color:var(--text-dim); font-family:var(--mono);
+}
+.pill.verified{color:var(--ok); border-color:#4fd07c33; background:#4fd07c0d;}
+.pill.inferred{color:var(--warn); border-color:#e5a94a33; background:#e5a94a0d;}
+
+.callout{
+  border:1px solid var(--border); border-left:3px solid var(--accent);
+  background:var(--bg-elev); border-radius:0 var(--radius) var(--radius) 0;
+  padding:12px 16px; margin:16px 0; font-size:13.5px; color:var(--text-dim);
+}
+.callout.warn{border-left-color:var(--warn);}
+.callout.warn b{color:var(--warn);}
+.callout.verify{border-left-color:var(--ok);}
+.callout b{color:var(--text);}
+
+.card-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0;}
+@media (max-width:720px){.card-grid{grid-template-columns:1fr;}}
+.card{
+  background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px;
+}
+.card h4{margin-top:0; color:var(--text);}
+.card p{font-size:13px; margin:4px 0;}
+
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13px;}
+th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--text-faint); border-bottom:1px solid var(--border); padding:8px 10px;
+}
+td{border-bottom:1px solid var(--border-soft); padding:9px 10px; color:var(--text-dim); vertical-align:top;}
+td code, th code{white-space:nowrap;}
+tr:hover td{background:var(--bg-elev);}
+
+.tree{
+  background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 20px; font-family:var(--mono); font-size:12.5px; line-height:1.9; color:var(--text-dim);
+  overflow-x:auto;
+}
+.tree .proj{color:var(--accent-2); font-weight:600;}
+.tree .comment{color:var(--text-faint);}
+
+.mermaid{background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin:18px -48px; overflow-x:auto; position:relative; cursor:zoom-in; transition:border-color .15s;}
+.mermaid:hover{border-color:var(--accent);}
+.diagram-expand-hint{
+  position:absolute; top:10px; right:10px; z-index:2;
+  background:var(--bg-elev-2); border:1px solid var(--border); color:var(--text-dim);
+  font-size:11px; padding:4px 9px; border-radius:20px; opacity:0; transition:opacity .15s;
+  pointer-events:none;
+}
+.mermaid:hover .diagram-expand-hint{opacity:1;}
+
+.diagram-modal{position:fixed; inset:0; background:rgba(6,8,11,.93); z-index:1000; display:none; flex-direction:column;}
+.diagram-modal.open{display:flex;}
+.diagram-modal-toolbar{
+  display:flex; align-items:center; gap:8px; padding:10px 18px;
+  border-bottom:1px solid var(--border); background:var(--bg-elev); flex:none;
+}
+.diagram-modal-toolbar button{
+  background:var(--bg-elev-2); border:1px solid var(--border); color:var(--text);
+  width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:16px; line-height:1;
+  font-family:var(--sans);
+}
+.diagram-modal-toolbar button:hover{border-color:var(--accent); color:var(--accent);}
+.diagram-modal-toolbar .zoom-level{color:var(--text-dim); font-size:12px; min-width:44px; text-align:center; font-family:var(--mono);}
+.diagram-modal-toolbar .modal-hint{color:var(--text-faint); font-size:11.5px; margin-left:10px;}
+.diagram-modal-toolbar .close-btn{margin-left:auto;}
+.diagram-modal-body{flex:1; overflow:auto; padding:50px; cursor:grab;}
+.diagram-modal-body.grabbing{cursor:grabbing;}
+.diagram-modal-body svg{display:block; max-width:none !important;}
+@media (max-width:720px){.diagram-modal-toolbar .modal-hint{display:none;}}
+.mermaid svg{height:auto;}
+
+.toc{
+  position:sticky; top:70px; float:right; width:190px; margin:0 0 20px 24px;
+  border-left:1px solid var(--border-soft); padding-left:14px;
+}
+.toc-title{font-size:11px; text-transform:uppercase; color:var(--text-faint); margin-bottom:8px; letter-spacing:.05em;}
+.toc a{display:block; font-size:12px; color:var(--text-faint); padding:3px 0; text-decoration:none;}
+.toc a:hover{color:var(--accent);}
+@media (max-width:1180px){.toc{display:none;}}
+
+.status-strip{display:flex; gap:10px; flex-wrap:wrap; margin:20px 0 30px;}
+.status-chip{
+  display:flex; align-items:center; gap:6px; font-size:12px; padding:6px 12px;
+  border-radius:20px; border:1px solid var(--border); color:var(--text-dim);
+}
+.dot{width:7px;height:7px;border-radius:50%;}
+.dot.done{background:var(--ok);}
+.dot.next{background:var(--warn);}
+.dot.pending{background:var(--text-faint);}
+
+footer{margin-top:60px; padding-top:20px; border-top:1px solid var(--border-soft); color:var(--text-faint); font-size:12px;}
+
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-badge">DX</div>
+      <div class="brand-text"><b>E-DX Internals</b><span>Documentação técnica interna</span></div>
+    </div>
+    <div class="searchbox"><input id="searchInput" placeholder="Buscar classes, RFC, seções…" oninput="doSearch(this.value)"></div>
+    <div id="navRoot">
+      <div class="navgroup">
+        <div class="navgroup-title">Início</div>
+        <div class="navlink" data-target="visao-geral" onclick="go('visao-geral')">Visão geral &amp; escopo</div>
+        <div class="navlink" data-target="como-usar" onclick="go('como-usar')">Como navegar este documento</div>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-title">Arquitetura</div>
+        <div class="navlink" data-target="arq-geral" onclick="go('arq-geral')">Arquitetura geral</div>
+        <div class="navlink" data-target="estrutura" onclick="go('estrutura')">Estrutura da solução</div>
+        <div class="navlink" data-target="fluxo-geral" onclick="go('fluxo-geral')">Fluxo geral (ida e volta)</div>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-title">Ponte SAP ⇄ .NET</div>
+        <div class="navlink" data-target="sap-bridge" onclick="go('sap-bridge')">Como a ponte funciona</div>
+        <div class="navlink" data-target="edx-srv-lifecycle" onclick="go('edx-srv-lifecycle')">Ciclo de vida do E-DX-SRV</div>
+        <div class="navlink" data-target="sap-config" onclick="go('sap-config')">Configuração da conexão RFC</div>
+        <div class="navlink" data-target="rfc-catalog" onclick="go('rfc-catalog')">Catálogo de RFC Server Functions</div>
+        <div class="navlink" data-target="abap-crossref" onclick="go('abap-crossref')">Cruzamento ABAP ⇄ .NET</div>
+        <div class="navlink" data-target="estudo-caso" onclick="go('estudo-caso')">Estudo de caso: MDDOWNNFE</div>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-title">Módulos funcionais (próximas fases)</div>
+        <div class="navlink" data-target="mod-nfe" onclick="go('mod-nfe')">NFe — recepção/manifestação/cancel.</div>
+        <div class="navlink" data-target="mod-nfse" onclick="go('mod-nfse')">NFSe</div>
+        <div class="navlink" data-target="mod-siscomex" onclick="go('mod-siscomex')">DUE / DUIMP (Siscomex)</div>
+        <div class="navlink" data-target="mod-mail" onclick="go('mod-mail')">E-mail (MAIL)</div>
+        <div class="navlink" data-target="mod-cer" onclick="go('mod-cer')">Certificados &amp; segurança</div>
+        <div class="navlink" data-target="mod-outros" onclick="go('mod-outros')">CTe · MDFe · GNRE · FCI · EGRF/EGTS</div>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-title">Referência</div>
+        <div class="navlink" data-target="metodologia" onclick="go('metodologia')">Fontes e rastreabilidade</div>
+        <div class="navlink" data-target="roadmap" onclick="go('roadmap')">Escopo e itens pendentes</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="content" id="content">
+      <div class="topbar" style="margin-left:-48px;margin-right:-48px;padding-left:24px;">
+        <button class="burger" onclick="toggleSidebar()">☰</button>
+        <div class="breadcrumb">E-DX Internals / <b id="crumbCurrent">Visão geral</b></div>
+      </div>
+
+      <!-- VISÃO GERAL -->
+      <section id="visao-geral">
+        <h1>E-DX — Documentação Técnica Interna</h1>
+        <p class="lede">Referência oficial de engenharia para manutenção e evolução do E-DX: o middleware .NET que conecta o SAP ao mundo fiscal (SEFAZ, prefeituras, Siscomex) por RFC, SOAP, e-mail e HTTP.</p>
+
+        <p>Este documento cobre a arquitetura completa do sistema, a estrutura da solução, a ponte de comunicação SAP⇄.NET (com o catálogo completo de RFC Server Functions e o cruzamento com os métodos ABAP de <code>/XEGR/CLEGR_EDX</code>) e o funcionamento de cada módulo de domínio fiscal: NFe, NFSe, DUE/DUIMP, E-mail, Certificados/segurança, CTe, MDFe, GNRE, FCI, EGRF e EGTS.</p>
+
+        <div class="callout warn"><b>Fora do escopo desta versão:</b> as camadas <code>E-DX-API</code>/<code>E-DX-WEB</code> (rotas HTTP) e o aplicativo desktop <code>E-DX</code> (WinForms) ainda não foram documentados em profundidade — ver <a href="#roadmap" onclick="go('roadmap')">Escopo e itens pendentes</a>.</div>
+
+        <h3>Convenções deste documento</h3>
+        <p>Toda afirmação técnica é rastreável ao código-fonte (.NET) ou aos métodos ABAP exportados que a sustentam. Onde uma relação entre SAP e .NET não pôde ser confirmada por chamada direta (por exemplo, Function Modules referenciados pelo ABAP que não têm implementação no pacote .NET analisado — provavelmente residentes apenas do lado SAP), isso é indicado como <b>Presumido</b>; o restante do conteúdo é tratado como confirmado. Ver <a href="#abap-crossref" onclick="go('abap-crossref')">Cruzamento ABAP⇄.NET</a>.</p>
+      </section>
+
+      <section id="como-usar">
+        <h2>Como navegar este documento</h2>
+        <p>O menu lateral segue a estrutura de camadas do sistema: fundação (arquitetura, estrutura, ponte SAP⇄.NET), módulos de domínio fiscal e referência. Use a busca no topo do menu para pular direto a uma classe, RFC ou palavra-chave.</p>
+      </section>
+
+      <!-- ARQUITETURA GERAL -->
+      <section id="arq-geral">
+        <h2>Arquitetura geral</h2>
+        <p>O E-DX é um <b>middleware fiscal</b>: ele fica entre o SAP (ECC/S4) e o mundo externo (governo, prefeituras, e-mail), fazendo o SAP falar XML/SOAP/RFC com sistemas que ele não fala nativamente.</p>
+
+        <div class="mermaid">
+graph TB
+  SAP["SAP ECC / S4HANA<br/><span style='font-size:11px'>/XEGR/CLEGR_EDX</span>"]
+  RFC["RFC / SAP Gateway<br/><span style='font-size:11px'>SAP NCo (RfcServer / RfcDestination)</span>"]
+  SRV["E-DX-SRV<br/><span style='font-size:11px'>Windows Service · host do RFC Server</span>"]
+  LIB["E-DX-LIB<br/><span style='font-size:11px'>núcleo de negócio: NFE, NFSe, CTE, MDFE, DUE/DUIMP, GNRE, FCI, MAIL, CER</span>"]
+  IIS["IIS<br/><span style='font-size:11px'>E-DX-API / E-DX-WEB (REST, ASMX)</span>"]
+  WIN["E-DX (WinForms)<br/><span style='font-size:11px'>console de operação/config</span>"]
+  SEFAZ["SEFAZ<br/><span style='font-size:11px'>SOAP · NFe/CTe/MDFe</span>"]
+  PREF["Prefeituras<br/><span style='font-size:11px'>SOAP/REST NFSe (múltiplos padrões)</span>"]
+  SISC["Siscomex<br/><span style='font-size:11px'>REST · DUE/DUIMP</span>"]
+  MAIL["SMTP / IMAP / POP3<br/><span style='font-size:11px'>OAuth2 (Graph), leitura de e-mails/anexos</span>"]
+
+  SAP <--> |RFC| RFC
+  RFC <--> SRV
+  SRV --> LIB
+  IIS --> LIB
+  WIN --> LIB
+  LIB <--> |SOAP/XML assinado| SEFAZ
+  LIB <--> |SOAP/REST XML| PREF
+  LIB <--> |REST + OAuth2| SISC
+  LIB <--> |SMTP/IMAP/POP3| MAIL
+
+  classDef sapNode fill:#5b8cff22,stroke:#5b8cff,color:#e7ebf1;
+  classDef netNode fill:#171c25,stroke:#232a35,color:#e7ebf1;
+  classDef extNode fill:#38d0c922,stroke:#38d0c9,color:#e7ebf1;
+  class SAP,RFC sapNode;
+  class SRV,LIB,IIS,WIN netNode;
+  class SEFAZ,PREF,SISC,MAIL extNode;
+        </div>
+        
+        <p>A direção SAP→.NET é confirmada no código: <code>E-DX-SRV</code> registra um <code>RfcServer</code> via SAP NCo (<code>SAP.Middleware.Connector</code>) usando <code>clsSAPServerFun</code> como handler. O SAP <b>chama</b> o .NET (RFC Server Program registrado), não o contrário — ver <a href="#sap-bridge" onclick="go('sap-bridge')">Ponte SAP⇄.NET</a>.</p>
+
+        <h3>Componentes da arquitetura</h3>
+        <div class="card-grid">
+          <div class="card"><h4>SAP ECC/S4 + classe /XEGR/CLEGR_EDX</h4><p>Camada ABAP que decide <i>quando</i> chamar o E-DX (ex: baixar XML de NFe, enviar e-mail de manifestação, verificar assinatura) e resolve qual destino RFC usar por empresa/filial/função.</p></div>
+          <div class="card"><h4>RFC / SAP NCo</h4><p><code>SAP.Middleware.Connector</code> é a biblioteca .NET oficial da SAP (NCo) usada nos dois sentidos: como <b>servidor RFC</b> (SAP chama o .NET) e como <b>cliente RFC</b> (o .NET pode chamar de volta o SAP, via <code>clsSAPClientCon</code>/<code>clsSAPClientFun</code>).</p></div>
+          <div class="card"><h4>E-DX-SRV (Windows Service)</h4><p>Processo de fundo que hospeda o RFC Server. É o coração operacional do sistema — fica sempre rodando, ouvindo chamadas do SAP.</p></div>
+          <div class="card"><h4>E-DX-LIB</h4><p>Biblioteca de classes compartilhada por todos os front-ends (serviço, API, WinForms) — contém toda a lógica de negócio por domínio fiscal.</p></div>
+          <div class="card"><h4>E-DX-API / E-DX-WEB (IIS)</h4><p>Expõe parte da funcionalidade via HTTP: <code>WebEdxController</code>, <code>SIAController</code>, <code>FLOWLSController</code> (API REST) e <code>wbsedx.asmx</code> (web service SOAP legado).</p></div>
+          <div class="card"><h4>E-DX (WinForms)</h4><p>Aplicação de desktop para configurar empresas/certificados, testar conexões (SAP, e-mail, internet) e operar o serviço manualmente.</p></div>
+          <div class="card"><h4>Governo (SEFAZ / Prefeituras / Siscomex)</h4><p>Web services SOAP (NFe/CTe/MDFe via SEFAZ), SOAP/REST heterogêneos por prefeitura (NFSe) e REST com OAuth2 (Siscomex DUE/DUIMP).</p></div>
+          <div class="card"><h4>SMTP / IMAP / POP3</h4><p>Módulo <code>MAIL</code> usa bibliotecas de terceiros embarcadas (<code>OpenPop</code>, <code>OpenImap</code>) mais OAuth2/Graph para ler e-mails de manifestação e anexos XML de fornecedores.</p></div>
+        </div>
+        <div class="callout warn"><b>Nota de escopo:</b> os detalhes internos de <code>E-DX-API</code>/<code>E-DX-WEB</code> (rotas, contratos DTO) ainda não foram documentados a fundo — os controllers foram apenas indexados (<code>WebEdxController</code>, <code>SIAController</code>, <code>FLOWLSController</code>). Ver <a href="#roadmap" onclick="go('roadmap')">Escopo e itens pendentes</a>.</div>
+      </section>
+
+      <!-- ESTRUTURA DA SOLUÇÃO -->
+      <section id="estrutura">
+        <h2>Estrutura da solução</h2>
+        <p><code>E-DX-Solution.sln</code> agrega 10 projetos C# ativos, mais utilitários de terceiros embarcados.  por leitura direta da árvore de diretórios do ZIP.</p>
+
+        <div class="tree">
+<span class="proto">E-DX-Solution.sln</span>
+├── <span class="proj">E-DX</span>/                    <span class="comment"># WinForms — console de operação/config (frmMain, frmConfig, frmCertific...)</span>
+├── <span class="proj">E-DX-SRV</span>/                <span class="comment"># Windows Service — hospeda o RFC Server SAP (coração do sistema)</span>
+├── <span class="proj">E-DX-WTC</span>/                <span class="comment"># Windows Service auxiliar/"watcher" (EDX_WTC, WTC.cs)</span>
+├── <span class="proj">E-DX-API</span>/                <span class="comment"># Web API (IIS) — Controllers/ WebEdxController, SIAController, FLOWLSController</span>
+├── <span class="proj">E-DX-WEB</span>/                <span class="comment"># ASP.NET WebForms/ASMX legado — wbsedx.asmx, Novoex.cs</span>
+├── <span class="proj">E-DX-Console</span>/            <span class="comment"># utilitário de linha de comando</span>
+├── <span class="proj">E-DX-WIN-NEW</span>/            <span class="comment"># app WPF em construção (App.xaml/MainWindow.xaml) — não integrada ao fluxo principal</span>
+├── <span class="proj">E-DX-LIB</span>/                <span class="comment"># NÚCLEO — toda a lógica de negócio, organizada por domínio:</span>
+│   ├── SAP/            <span class="comment"># ponte RFC: clsSAPServerFun, clsSAPServerCon, clsSAPClientCon, clsSAPClientFun, clsSAPServerHandler</span>
+│   ├── NFE/             <span class="comment"># 25 arquivos — módulo mais extenso: envio/consulta/download/eventos NFe+CTe (SOAP SEFAZ)</span>
+│   ├── NFSe/            <span class="comment"># 12 arquivos — integrações por prefeitura (Betha, BH, GINFES, Recife, Rio, SP...) + leitor de PDF</span>
+│   ├── MAIL/            <span class="comment"># clsOpenMail, OAuth2/OAuth2Graph — IMAP/POP3/SMTP + Microsoft Graph</span>
+│   ├── SISCOMEX/        <span class="comment"># DUE/ e DUIMP/ — REST + autenticação Siscomex</span>
+│   ├── CER/             <span class="comment"># certificados digitais: clsCertificado, CertificateValidate, validade/política</span>
+│   ├── CTE/, MDFE/      <span class="comment"># Controller.cs, clsModuleMDFe — CT-e e MDF-e</span>
+│   ├── GNRE/             <span class="comment"># guias de recolhimento (clsGNREnac, clsGNRErio, clsModuleGNRE)</span>
+│   ├── FCI/              <span class="comment"># Ficha de Conteúdo de Importação (integração Fazenda-SP)</span>
+│   ├── EGRF/, EGTS/, EGT/ <span class="comment"># módulos "E-GR"/Siscoserv correlatos (Controller.cs, clsModuloSiscoServ)</span>
+│   ├── WEB/              <span class="comment"># WebFunctions, WebRequestEDX, Utilities — chamadas HTTP genéricas + Siscoserv/Novoex</span>
+│   ├── APIs/             <span class="comment"># integrações auxiliares (ChatGPT.cs, PBI_SQLConnect, PdfProcessor)</span>
+│   └── GERAL/            <span class="comment"># transversal: clsConfigItem/List (config por empresa), clsSystemLog, clsFunction, clsRijndaelSimple (criptografia)</span>
+├── <span class="proj">OpenPop</span>/, <span class="proj">OpenImap</span>/    <span class="comment"># bibliotecas de terceiros — clientes POP3/IMAP embarcados no código-fonte</span>
+├── <span class="proj">SharpCompress</span>/           <span class="comment"># biblioteca de terceiros — compressão/descompressão de arquivos</span>
+├── <span class="proj">LimiLabs - License Key</span>/   <span class="comment"># licença comercial (provável relação com OpenPop/OpenImap, da LimiLabs)</span>
+├── <span class="proj">Instalador E-DX</span>/, <span class="proj">Instalador E-DX Multilinguagem</span>/, <span class="proj">E-DX-Setup</span>/  <span class="comment"># instaladores</span>
+└── <span class="proj">E-DX-UnitTest</span>/, <span class="proj">E-DX-TEST</span>/    <span class="comment"># testes (GNRETest, Nfe400Test, NovoExTest, frmMailTest)</span>
+        </div>
+
+        <div class="callout"><b>Nota:</b> o repositório mantém também um inventário técnico auxiliar (<code>DOCUMENTACAO_CODIGO.md</code>, 461 tipos / 1366 métodos catalogados) — útil como índice de assinaturas, mas sem explicar fluxo ou responsabilidade de cada classe. Este documento complementa esse índice com o funcionamento real do sistema.</div>
+
+        <h3>Onde cada preocupação transversal mora</h3>
+        <table>
+          <tr><th>Preocupação</th><th>Localização</th><th>Status</th></tr>
+          <tr><td>Configuração por empresa</td><td><code>E-DX-LIB/GERAL/clsConfigItem.cs</code>, <code>clsConfigList.cs</code></td><td></td></tr>
+          <tr><td>Log do sistema</td><td><code>E-DX-LIB/GERAL/clsSystemLog.cs</code> — chamado como <code>funcGeraLog(...)</code> em todo o código</td><td><b>Localização confirmada</b> <b>Formato interno não documentado</b></td></tr>
+          <tr><td>Criptografia simétrica (senhas/config)</td><td><code>E-DX-LIB/GERAL/clsRijndaelSimple.cs</code> (Rijndael/AES)</td><td><b>Localização confirmada</b></td></tr>
+          <tr><td>Certificado digital</td><td><code>E-DX-LIB/CER/*</code></td><td><b>Pendente de aprofundamento</b></td></tr>
+          <tr><td>Comunicação SAP</td><td><code>E-DX-LIB/SAP/*</code></td><td><b>Documentado</b></td></tr>
+          <tr><td>Retry / verificação periódica de conexão SAP</td><td><code>EDX_SRV.cs → funcCheckServiceConnection</code> (timer de 30s)</td><td></td></tr>
+        </table>
+      </section>
+
+      <!-- FLUXO GERAL -->
+      <section id="fluxo-geral">
+        <h2>Fluxo geral (ida e volta)</h2>
+        <p>Existem, na prática, <b>dois fluxos distintos</b> confirmados no código — é importante não confundi-los:</p>
+
+        <h3>1. SAP → Governo (o caminho mais comum: SAP inicia)</h3>
+        <div class="mermaid">
+sequenceDiagram
+  participant ABAP as SAP/ABAP
+  participant GW as Gateway RFC
+  participant SRV as E-DX-SRV
+  participant FUN as clsSAPServerFun
+  participant BIZ as E-DX-LIB
+  participant GOV as Governo
+
+  ABAP->>ABAP: get_rfc_destination(bukrs, branch, function)
+  ABAP->>GW: CALL FUNCTION '/XEGR/FGR_xxx' DESTINATION rfcdest
+  GW->>SRV: invoca Function Module registrado
+  SRV->>FUN: dispara método [RfcServerFunction]
+  FUN->>BIZ: delega para classe de domínio
+  BIZ->>BIZ: monta/valida XML
+  BIZ->>GOV: SOAP/REST (assinado quando aplicável)
+  GOV-->>BIZ: resposta XML
+  BIZ-->>FUN: retorno + tabela de saída
+  FUN-->>GW: parâmetros de saída RFC (pstaret, pmotret...)
+  GW-->>ABAP: resposta síncrona
+        </div>
+
+        <h3>2. .NET → SAP (caminho inverso — confirmado como capacidade, uso pontual)</h3>
+        <p>A classe <code>clsSAPClientFun</code> (1125 linhas) e <code>clsSAPClientCon</code> (implementa <code>IDestinationConfiguration</code>) dão ao .NET a capacidade de <b>chamar function modules do SAP</b> como cliente RFC — por exemplo, para gravar retorno de processamento de volta na base SAP. <b>Presumido</b>: não está determinado quais métodos de <code>clsSAPClientFun</code> são chamados por qual fluxo de negócio — fica para a fase de aprofundamento por módulo.</p>
+
+        <div class="callout"><b>Consequência prática para manutenção:</b> se uma chamada do SAP "não retorna nada", o primeiro lugar a olhar não é a rede — é <code>clsSAPServerFun</code> (o método RFC específico) e depois a classe de domínio que ele delega. Se o SAP "não recebe atualização de status", o suspeito é <code>clsSAPClientFun</code>/<code>clsSAPClientCon</code>.</div>
+      </section>
+
+      <!-- PONTE SAP <-> .NET -->
+      <section id="sap-bridge">
+        <h2>Comunicação SAP ⇄ .NET</h2>
+        <p><b>Fontes:</b> <code>E-DX-SRV/EDX_SRV.cs</code>, <code>E-DX-LIB/SAP/*.cs</code></p>
+        <p>A ponte usa o <b>SAP Connector for Microsoft .NET (NCo)</b>, pacote <code>SAP.Middleware.Connector</code>. Cinco classes formam a ponte:</p>
+        <table>
+          <tr><th>Classe</th><th>Interface SAP NCo</th><th>Papel</th></tr>
+          <tr><td><code>clsSAPServerCon</code></td><td><code>IServerConfiguration</code></td><td>Fornece os parâmetros de <b>registro do .NET como servidor RFC</b> (Program ID, Gateway) — usado para o SAP <i>chamar</i> o .NET.</td></tr>
+          <tr><td><code>clsSAPServerFun</code></td><td>handler com métodos <code>[RfcServerFunction]</code></td><td>Onde cada Function Module RFC é <b>implementado</b> em C#. 1973 linhas, 78 funções registradas (ver <a href="#rfc-catalog" onclick="go('rfc-catalog')">catálogo</a>).</td></tr>
+          <tr><td><code>clsSAPServerHandler</code></td><td><code>ITransactionIDHandler</code></td><td>Controle de tRFC (commit/rollback/confirm por Transaction ID). implementado mas <b>não registrado</b> — a linha que o ativaria em <code>EDX_SRV.cs</code> está comentada.</td></tr>
+          <tr><td><code>clsSAPClientCon</code></td><td><code>IDestinationConfiguration</code></td><td>Fornece parâmetros de <b>conexão de saída</b> (.NET → SAP), incluindo suporte a Load Balancing (Message Server) ou conexão direta.</td></tr>
+          <tr><td><code>clsSAPClientFun</code></td><td>—</td><td>Métodos que o .NET usa para <b>chamar</b> function modules do SAP como cliente. 1125 linhas.</td></tr>
+        </table>
+
+        <div class="callout warn"><b>Segurança:</b> ambas as classes de conexão suportam SNC (Secure Network Communications) — <code>UseSNC</code> ativa <code>SncMode=1</code>, <code>SncQOP=9</code> e aponta para <code>C:\SAPCrypto\sapcrypto.dll</code>. É condicional por configuração de empresa (<code>clsConfigItem.UseSNC</code>), não obrigatório.</div>
+      </section>
+
+      <section id="edx-srv-lifecycle">
+        <h3 style="font-size:22px;margin-top:0;">Ciclo de vida do E-DX-SRV (onde tudo é instanciado)</h3>
+        <p><code>Program.cs</code> → <code>ServiceBase.Run(new EDX_SRV())</code> → Windows chama <code>OnStart(args)</code> → <code>StartService(args, true)</code>. Sequência real de inicialização:</p>
+        <div class="mermaid">
+graph TD
+  A["Le args da linha de comando<br/>(/EMP=xxx = codigo da empresa)"] --> B["new clsConfigList()<br/>carrega config da empresa"]
+  B --> C{ENFeAtivo?}
+  C -- nao --> X["Loga erro e para o servico"]
+  C -- sim --> D["Instancia:<br/>clsSAPServerFun, clsSAPServerCon,<br/>clsSAPClientCon, clsSAPClientFun"]
+  D --> E["clsSAPClientCon.funcSetParameters()<br/>RfcDestinationManager.RegisterDestinationConfiguration()"]
+  E --> F["clsSAPServerCon.funcSetParameters()<br/>RfcServerManager.RegisterServerConfiguration()"]
+  F --> G["RfcServerManager.GetServer(...,<br/>handlers=[clsSAPServerFun])"]
+  G --> H["Assina eventos:<br/>RfcServerError / ApplicationError / StateChanged"]
+  H --> I["varSAPServerInst.Start()"]
+  I --> J["Timer 30s: funcCheckServiceConnection<br/>(monitoramento continuo)"]
+        </div>
+        <p>Cada instância do serviço atende <b>uma única empresa</b> por vez (<code>/EMP=</code>) — múltiplas empresas exigem múltiplas instâncias do serviço Windows rodando em paralelo, cada uma com seu próprio Program ID/RFC destination.</p>
+
+        <h4>Tratamento de erro no ciclo de vida</h4>
+        <table>
+          <tr><th>Evento</th><th>Origem</th><th>Efeito</th></tr>
+          <tr><td><code>RfcServerError</code></td><td>Falha de baixo nível do NCo (ex: rede caiu entre SAP e o servidor RFC)</td><td>Log nível <b>E</b> (erro) em <code>clsSystemLog</code></td></tr>
+          <tr><td><code>RfcServerApplicationError</code></td><td>Exceção dentro de um método <code>[RfcServerFunction]</code></td><td>Log nível <b>W</b> (warning)</td></tr>
+          <tr><td><code>RfcServerStateChanged</code></td><td>Mudança de estado da conexão (ex: para "Broken")</td><td>Log nível <b>W</b>, guarda estado antigo/novo</td></tr>
+        </table>
+        <p><code>OnStop()</code> desfaz tudo na ordem inversa: <code>UnregisterDestinationConfiguration</code> → <code>varSAPServerInst.Shutdown(false)</code> → <code>UnregisterServerConfiguration</code>.</p>
+      </section>
+
+      <section id="sap-config">
+        <h3 style="font-size:22px;">Configuração da conexão RFC</h3>
+        <p>Parâmetros do NCo (<code>RfcConfigParameters</code>) são montados a partir de <code>clsConfigItem</code> (config por empresa, não de <code>app.config</code> diretamente — <code>app.config</code> só guarda <code>LogDir</code>/<code>EventViewer</code> globais).</p>
+        <table>
+          <tr><th>Lado</th><th>Parâmetro NCo</th><th>Origem (clsConfigItem)</th></tr>
+          <tr><td rowspan="5">Servidor (SAP→.NET)</td><td>GatewayHost</td><td><code>SAPServidorAplic</code></td></tr>
+          <tr><td>GatewayService</td><td><code>RFCServicoGateway</code></td></tr>
+          <tr><td>ProgramID</td><td><code>RFCIDPrograma</code></td></tr>
+          <tr><td>RegistrationCount</td><td><code>RFCTasks</code></td></tr>
+          <tr><td>SAPRouter</td><td><code>SAPCadeiaRouter</code></td></tr>
+          <tr><td rowspan="7">Cliente (.NET→SAP)</td><td>AppServerHost <i>ou</i> MessageServerHost+LogonGroup</td><td><code>SAPServidorAplic</code> (conexão direta) <i>ou</i> <code>SAPMessageServer</code>+<code>SAPLogonGroup</code> (load balancing)</td></tr>
+          <tr><td>SystemNumber / SystemID / Client</td><td><code>SAPNumInstancia</code> / <code>SAPIDInstancia</code> / <code>SAPCliente</code></td></tr>
+          <tr><td>User / Password</td><td><code>SAPUsuario</code> / <code>SAPSenha</code> (ou override por parâmetro)</td></tr>
+          <tr><td>PoolSize</td><td fixo>"10" (hardcoded)</td></tr>
+          <tr><td>IdleTimeout</td><td fixo>"6000" (hardcoded)</td></tr>
+          <tr><td>Language</td><td>"pt" ou "en" conforme <code>CultureInfo.CurrentCulture</code></td></tr>
+          <tr><td>SAPRouter</td><td><code>SAPCadeiaRouter</code></td></tr>
+        </table>
+        <div class="callout"><b>Onde mexer em timeout/pool:</b> hoje <code>PoolSize</code> (10) e <code>IdleTimeout</code> (6000 ms) estão <b>hardcoded</b> em <code>clsSAPClientCon.funcSetParameters</code> — não são configuráveis por empresa nesta versão do código. Isso é um ponto de atenção para quem for investigar lentidão ou esgotamento de conexões.</div>
+      </section>
+
+      <section id="rfc-catalog">
+        <h3 style="font-size:22px;">RFC Server Functions — detalhamento completo</h3>
+        <p><code>clsSAPServerFun.cs</code> (1973 linhas) registra 78 funções via <code>[RfcServerFunction(Name="...")]</code>, organizadas em 7 blocos (<code>#region</code> no código-fonte): <b>E-GR</b> (NFe/NFSe/E-mail/status), <b>E-GTS</b> (Siscoserv), <b>E-GTE</b> (DUE), <b>E-GTI</b> (DUIMP/IA), <b>E-GRF</b> (EGRF), <b>E-GNRE</b> (GNRE) e <b>E-CI</b> (FCI). Esta seção documenta, para cada função, o parâmetro de entrada, o processamento e o parâmetro de saída — a referência para diagnosticar qualquer chamada que "não funciona".</p>
+
+        <h4>Padrão de execução comum (bloco E-GR)</h4>
+        <p>Toda função do bloco E-GR — a grande maioria das 78 — segue exatamente o mesmo esqueleto:</p>
+        <div class="mermaid">
+graph TD
+  A["mvarSTATUS = RUNNING"] --> B["instancia clsSystemLog + classe de negocio (ex: clsModuloNFe)"]
+  B --> C["log inicio - categoria fixa, mensagem localizada via ResourceManager"]
+  C --> D["try: chama o metodo de negocio passando pRfcFunction e clsActualItem"]
+  D --> E{"ConsultaRealizada == true?"}
+  E -- sim --> F["log fim (nivel S)"]
+  E -- nao --> G["log fim (nivel E)"]
+  D -->|excecao| H["catch: mensagem = 'E000 - ' + exception.Message<br/>log nivel E"]
+  F --> I["mvarSTATUS = STOPPED"]
+  G --> I
+  H --> I
+        </div>
+        <table>
+          <tr><th>Elemento</th><th>Detalhe</th></tr>
+          <tr><td><code>clsActualItem</code></td><td>Campo <b>estático</b> da classe (<code>public static clsConfigItem clsActualItem</code>). É atribuído uma única vez em <code>EDX_SRV.cs</code> na inicialização do serviço (<code>clsSAPServerFun.clsActualItem = varclsConfigList.clsActualItem</code>) a partir da empresa resolvida por <code>/EMP=</code>, e reatribuído periodicamente pela rotina de verificação de conexão. Como é estático, <b>todas</b> as chamadas RFC atendidas por essa instância do serviço compartilham o mesmo objeto de configuração/certificado — coerente com a arquitetura de uma instância de serviço por empresa.</td></tr>
+          <tr><td><code>mvarSTATUS</code></td><td>Flag de estado (RUNNING/STOPPED) da última função em execução — útil para saber, olhando o processo em memória, se o serviço está no meio de uma chamada.</td></tr>
+          <tr><td>Categoria de log</td><td>String fixa por função (ex: <code>"ENFE"</code>, <code>"EGTS"</code>, <code>"EGRF"</code>, <code>"GNRE"</code>, <code>"XBR"</code>) — é o campo usado para filtrar o log do dia (ver <a href="#mod-cer" onclick="go('mod-cer')">arquivo de log</a>). A maioria das funções do bloco E-GR usa <code>"ENFE"</code> mesmo quando a operação não é NFe (ex: e-mail, conversão de PDF) — ao procurar um problema no log, filtrar só por categoria pode esconder o evento; é mais confiável filtrar pela tag <code>"clsSAPServerFun:funcXXX"</code> que acompanha cada linha.</td></tr>
+          <tr><td>Prefixo <code>/XEIT/</code> vs <code>/XEGR/</code></td><td>Confirmado em código: a versão <code>/XEIT/</code> contém a implementação real; a versão <code>/XEGR/</code> é um método separado que só chama a <code>/XEIT/</code> internamente (ex: <code>funcEGR_MDDOWNNFE</code> chama <code>funcEIT_MDDOWNNFE</code>). São dois nomes RFC distintos no SM59 apontando para o mesmo processamento.</td></tr>
+          <tr><td>Erro convertido em <code>"E000 - " + Message</code></td><td>Toda exceção não tratada dentro do método de negócio chega ao SAP como uma string começando com <code>E000</code> — <b>a stack trace original não é logada na maioria dos casos</b> (só o <code>.Message</code>), o que limita o diagnóstico a partir do log do E-DX sozinho; muitas vezes é necessário reproduzir a chamada para ver a exceção completa.</td></tr>
+        </table>
+
+        <h4>Três convenções de retorno diferentes coexistem no mesmo arquivo</h4>
+        <table>
+          <tr><th>Convenção</th><th>Onde é usada</th><th>Como interpretar</th></tr>
+          <tr><td><code>PSTARET</code> / <code>PMOTRET</code></td><td>Bloco E-GR (NFe, NFSe, e-mail, assinatura) — convenção legada</td><td><code>PSTARET</code> é o código de status (<code>"100"</code>/<code>"140"</code> = sucesso variantes, <code>"ERR"</code>/<code>"E000"</code>/<code>"999"</code> = erro); <code>PMOTRET</code> é a mensagem/motivo em texto</td></tr>
+          <tr><td><code>ET_RETURN</code> (tabela BAPIRET2)</td><td><code>/XEGT/FEDX_DUIMP</code> (envio de DUIMP)</td><td>Convenção padrão SAP (BAPI Return Table): <code>TYPE</code> (<code>E</code>=erro, <code>S</code>=sucesso), <code>NUMBER</code> (código, ex: <code>"404"</code> para falha de autenticação), <code>MESSAGE</code> (texto) — só é populada explicitamente no caminho de erro de autenticação; nos demais caminhos a função retorna sem preencher nada</td></tr>
+          <tr><td><code>E_RC</code> numérico</td><td>Bloco E-CI (FCI) e <code>GetRegionConfiguration</code> (GNRE)</td><td><code>"0"</code> = sucesso, <code>"1"</code>/<code>"4"</code> = resposta vazia, <code>"2"</code>/<code>"9"</code> = exceção — código simples sem texto de mensagem associado (a mensagem, quando existe, vai em <code>E_RESPONSE</code>)</td></tr>
+        </table>
+        <div class="callout warn"><b>Implicação prática:</b> não existe um único "código de erro" a procurar em todo o sistema — o significado de sucesso/erro muda conforme o bloco. Ao investigar uma função, primeiro identificar a qual dos três grupos ela pertence antes de interpretar o valor de retorno.</div>
+
+        <h4>Bloco E-GR — NFe, NFSe, e-mail, status</h4>
+        <table>
+          <tr><th>Função RFC (par /XEIT/ + /XEGR/)</th><th>Método de negócio</th><th>Parâmetros de entrada usados</th><th>Saída</th></tr>
+          <tr><td><code>FGR_RFCTESTCN</code></td><td>local (não delega)</td><td>nenhum</td><td><code>PSTARET="100"</code> + mensagem de sucesso fixa — teste de conectividade pura, não valida nada além do RFC em si</td></tr>
+          <tr><td><code>FGR_MDCONSNFE</code></td><td><code>clsModuloNFe.funcConsultaDocs</code></td><td><code>PULTNSU</code> (ecoado de volta antes de processar)</td><td><code>PSTARET</code>/<code>PMOTRET</code> via método de negócio</td></tr>
+          <tr><td><code>FGR_MDCONSNFSE</code></td><td><code>clsGetXmlNfse.funcConsultaNfseEDX</code> (assíncrono, aguardado com <code>.GetAwaiter().GetResult()</code>)</td><td>parâmetros lidos dentro do método de negócio</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_DOWNPDFNFSE</code></td><td><code>clsGetXmlNfse</code> (método de download de PDF)</td><td>idem acima</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_MDCONSCAD</code></td><td><code>clsModuloNFe.funcConsultaCad</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_MDDOWNNFE</code></td><td><code>clsModuloNFe.funcDownloadDoc</code></td><td><code>PCODEMP, PNFCHAV, PAMBGOV, PCNPJDT</code>, tabela <code>TB_XMLMD</code> (opcional)</td><td><code>PSTARET</code> (fixo em <code>"140"</code> mesmo em muitos casos de sucesso — ver <a href="#estudo-caso" onclick="go('estudo-caso')">estudo de caso</a>), <code>PMOTRET</code></td></tr>
+          <tr><td><code>FEDX_GETNSU</code> / <code>ZEDX_GETNSU</code></td><td><code>clsModuloNFe.funcConsultaNSU</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code> — <code>ZEDX_GETNSU</code> é um segundo nome RFC apontando para o mesmo método</td></tr>
+          <tr><td><code>FGR_CHECKSIGN</code></td><td><code>clsModuloNFe.funcCheckSignature</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_MDEVENNFE</code></td><td><code>clsModuloNFe.funcManifestoDocEDX</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FEDX_XML_SEND</code></td><td><code>clsModuloNFe.funcSefazSend</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FEDX_XML_ASSIGN</code></td><td><code>clsModuloNFe.funcSefazAssign</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_PROTOCNFE</code></td><td><code>clsModuloNFe.funcConsultaProt</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_CONSTSERV</code></td><td><code>clsModuloNFe.funcConsultaStatusServico</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_MAILCONECT</code></td><td><code>clsOpenMail.funcTestConnection</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>YYES_TESTEMAIL</code></td><td>chama <code>funcEIT_MDMAILCONECT</code></td><td>idem acima</td><td>—</td></tr>
+          <tr><td><code>FGR_MDCONSMAIL</code></td><td><code>clsOpenMail.funcRequestEmail</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_MDDELEMAIL</code></td><td><code>clsOpenMail.funcDeleteEmail</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_SIEGCONSULT</code></td><td><code>clsModuloNFe.funcConsultaDocsSieg</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code> — ver nota de troubleshooting abaixo</td></tr>
+          <tr><td><code>FGR_CVPDFTOXML</code></td><td><code>clsModuloNFe.funcConvertPDFtoXML</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_SIGN_XML</code></td><td><code>clsModuloNFe.funcSignXML</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_SIGN_NFS</code></td><td><code>clsModuloNFe.funcSignXML_NFS</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code> — sem par <code>/XEIT/</code> explícito no atributo, mas segue o mesmo esqueleto</td></tr>
+          <tr><td><code>FGR_GET_NFSE</code></td><td><code>clsNFSeManager.funcGetNFSe</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FGR_GET_NFSE_WEB</code></td><td><b>nenhum</b> — corpo inteiro comentado</td><td>—</td><td>função retorna imediatamente sem setar nenhum parâmetro de saída — ver nota de troubleshooting</td></tr>
+          <tr><td><code>FGR_GETEDXLOG</code></td><td>local — lê o arquivo de log do dia em disco</td><td>nenhum parâmetro de entrada específico</td><td><code>E_XSTRING</code> — conteúdo do arquivo <code>ConfigPastaLOG + yyyyMMdd + ".xml"</code> convertido para bytes</td></tr>
+          <tr><td><code>FGR_MDCONSMAIL_NFSE_APPR</code></td><td><code>MailAprove.readMailtoAprove</code> (classe instanciada por chamada, não reusa o padrão das demais)</td><td>lidos pelo construtor de <code>MailAprove</code></td><td><code>PSTARET</code> (<code>"100"</code> ou <code>"999"</code>) / <code>PMOTRET</code> — categoria de log é <code>"XBR"</code>, diferente do padrão <code>"ENFE"</code></td></tr>
+          <tr><td><code>GET_MDFE_58</code></td><td><code>clsModuleMDFe.funcConsultaDocs</code></td><td>lidos internamente</td><td><code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FEDX_GETVERSION</code> / <code>FEDX_GETACTIVE</code> / <code>FEDX_GETMEMORY</code></td><td><code>SystemParams.GetVersion / IsActive / memoria</code></td><td>nenhum</td><td>parâmetros preenchidos pelo próprio <code>SystemParams</code>; em falha, só <code>E_STRING = "Nao Foi Possivel Executar a Funcao"</code></td></tr>
+          <tr><td><code>FGR_MDSCRAPNFE</code></td><td>local — <i>web scraping</i> direto do portal da SEFAZ</td><td>nenhum parâmetro RFC é lido</td><td>nenhum parâmetro de saída é setado — ver nota de troubleshooting (credencial fixa no código-fonte)</td></tr>
+        </table>
+
+        <h4>Blocos E-GTS / E-GTE / E-GTI — Siscoserv, DUE, DUIMP, IA</h4>
+        <table>
+          <tr><th>Função RFC</th><th>Método de negócio</th><th>Parâmetros / observações</th></tr>
+          <tr><td><code>FGTS_SENDFILE</code></td><td><code>clsModuloSiscoServ.funcSendFile</code></td><td>categoria de log <code>"EGTS"</code> no início, mas <code>"EGTX"</code> (sem S) no log de fim — inconsistência de nome de categoria entre as duas linhas de log da mesma função</td></tr>
+          <tr><td><code>FGTS_GETSTATU</code></td><td><code>clsModuloSiscoServ.funcGetStatus</code></td><td>categoria <code>"EGTS"</code></td></tr>
+          <tr><td><code>FGTE_RE_CREATE_BATCH</code></td><td>Novoex — transmite lote ao Siscomex</td><td>lê <code>I_XML</code>/credenciais Novoex; saída <code>E_BATCH</code> (número do lote) ou <code>E_ERROR="X"</code></td></tr>
+          <tr><td><code>FGTE_RE_PROCESS_BATCH</code></td><td>Novoex — consulta lote</td><td>lê <code>I_BATCH, I_USR_NOVOEX, I_PASS_NOVOEX</code>; saída <code>E_XML</code> ou <code>E_ERROR</code> com a descrição</td></tr>
+          <tr><td><code>FGTE_DUE_INSERT</code></td><td><code>DUE.DUECreate.createDUE()</code></td><td><b>sem log e sem try/catch</b> — se a criação do objeto <code>DUECreate</code> (que autentica no handshake) ou <code>createDUE()</code> lançar exceção, ela não é capturada aqui</td></tr>
+          <tr><td><code>FGTE_DUE_STATUS_CHECK</code></td><td><code>DUE.DUEConsult.consultDUE()</code></td><td>tem log de início, mas também sem try/catch ao redor da chamada</td></tr>
+          <tr><td><code>FGTE_DUE_CHANGE</code></td><td><code>DUE.DUERectify.rectifyDUE()</code></td><td>sem log e sem try/catch</td></tr>
+          <tr><td><code>FGTE_DUE_CHECK_COMPLETE</code></td><td><code>DUE.DUEConsult.consultDUEAll()</code></td><td>única função DUE com log completo e try/catch — lança exceção própria (<code>"Erro em Autenticação"</code>) se o handshake falhar</td></tr>
+          <tr><td><code>FEDX_DUIMP</code></td><td><code>DUIMP.DUIMPSend.sendDuimp()</code></td><td>lê <code>I_CPF, I_URLAUTH</code>; se autenticação com e-CPF falhar, popula a tabela <code>ET_RETURN</code> no formato BAPIRET2 (<code>TYPE=E, NUMBER=404, MESSAGE="Falha na Autenticação do E-CPF"</code>) em vez de <code>PSTARET</code>/<code>PMOTRET</code></td></tr>
+          <tr><td><code>FEDX_AI</code></td><td><code>DUIMP.connectGPT</code> / <code>connectGPT_Azure</code></td><td>lê <code>I_IA_TOOL</code> (<code>"AZURE"</code> ou outro valor) para escolher entre Azure OpenAI e OpenAI direto — sem log, sem try/catch</td></tr>
+          <tr><td><code>FEDX_EXTRACT_EGR</code></td><td><code>APIs.PBI_SQLConnect</code></td><td>cria/preenche tabela para consumo por Power BI — sem try/catch ao redor</td></tr>
+        </table>
+
+        <h4>Bloco E-GRF</h4>
+        <table>
+          <tr><th>Função RFC</th><th>Método de negócio</th><th>Parâmetros / observações</th></tr>
+          <tr><td><code>FXBR_SIGN_XML</code> / <code>FGRF_SIGN_XML</code></td><td><code>XmlHelper.Assinar</code></td><td>lê <code>I_BUKRS</code> (empresa, para resolver certificado) e <code>I_XML</code>; saída <code>E_XML_ASSINADO</code> — sem try/catch, sem log</td></tr>
+          <tr><td><code>FGRF_SEND_EVENT</code></td><td><code>EGRF.Controller.sendEventNFe</code></td><td>categoria de log <code>"EGRF"</code>, nível do log = <code>egrfReturn.Type</code> (repassado diretamente do retorno do controller)</td></tr>
+          <tr><td><code>FXBR_READ_EPP_INFO</code> / <code>FGRF_READ_EPP_INFO</code></td><td><b>nenhum</b> — corpo inteiro comentado</td><td>lê <code>I_XML</code> mas não faz nada com ele; nenhuma saída é setada</td></tr>
+          <tr><td><code>FXBR_EVEPROGSEND</code> / <code>FGRF_EVEPROGSEND</code></td><td><code>clsModuloNFe.funcManifestoDoc</code></td><td>categoria <code>"EGRF"</code></td></tr>
+          <tr><td><code>FXBR_EVEPROGCANC</code> / <code>FGRF_EVEPROGCANC</code></td><td><code>clsModuloNFe.funcManifestoDoc</code></td><td>chama exatamente o <b>mesmo método de negócio</b> que <code>EVEPROGSEND</code> — a diferenciação entre enviar e cancelar programação acontece dentro de <code>funcManifestoDoc</code> por algum parâmetro de entrada, não pela função RFC escolhida</td></tr>
+          <tr><td><code>FGRF_GET_DOCTOS</code></td><td><code>EGRF.Controller.docConsultSefaz</code></td><td>saída <code>E_RETURN</code> = concatenação de <code>Type + Message</code> do retorno do controller</td></tr>
+        </table>
+
+        <h4>Bloco E-GNRE</h4>
+        <table>
+          <tr><th>Função RFC</th><th>Método de negócio</th><th>Parâmetros / observações</th></tr>
+          <tr><td><code>FGNRE_GET_REGION_CONFIG</code></td><td>local — monta e envia SOAP diretamente para o webservice da GNRE</td><td>lê <code>I_COMPANY_CODE, I_ENVIRONMENT, I_REGION, I_REVENUE</code>, opcionalmente <code>I_VERSION</code> (default <code>"1.00"</code>) e <code>I_URL</code> (default aponta para <code>gnre.pe.gov.br</code> produção/teste conforme ambiente); resolve certificado via <code>clsActualItem.funcGetCertificate(companyCode, "EGNRE")</code>; saída <code>E_RC</code> (0/1/2) + <code>E_RESPONSE</code>. Desabilita validação de certificado do servidor inline (<code>ServicePointManager.ServerCertificateValidationCallback += delegate { return true; }</code>) — mais uma ocorrência do padrão descrito em <a href="#mod-cer" onclick="go('mod-cer')">Certificados &amp; segurança</a></td></tr>
+          <tr><td><code>FGNRE_BATCH_TRANSMIT</code></td><td><code>clsModuleGNRE.batchTransmitRequest</code></td><td>categoria <code>"GNRE"</code>; nível do log é decidido pelos 3 primeiros caracteres do retorno (<code>"[S]"</code> ou <code>"[E]"</code>)</td></tr>
+          <tr><td><code>FGNRE_BATCH_TRANSMIT_RES</code></td><td><code>clsModuleGNRE.batchTransmitResponse</code></td><td>mesmo padrão de log baseado em prefixo <code>[S]</code>/<code>[E]</code></td></tr>
+        </table>
+
+        <h4>Bloco E-CI (FCI)</h4>
+        <p>Diferente de todos os outros blocos: <b>sem log, sem <code>clsActualItem</code>, sem classe de negócio própria</b> — cada função chama diretamente uma API HTTP externa (<code>ics.multieditoras.com.br</code>), passando credenciais recebidas como parâmetro de entrada na própria chamada RFC.</p>
+        <table>
+          <tr><th>Função RFC</th><th>Endpoint externo</th><th>Parâmetros de entrada</th><th>Saída</th></tr>
+          <tr><td><code>FECI_RFC_REQ_TEC_BY_NCM</code></td><td><code>/ics/tec/{ncm}/arquivo</code></td><td><code>I_NCM, I_CHV_ACC, I_COD_CLI</code></td><td><code>E_REQ_XML</code> + <code>E_RC</code> (0/4/9)</td></tr>
+          <tr><td><code>FECI_RFC_GET_TEC_BY_REQ</code></td><td><code>/ics/arquivo/{id}</code> (retorna .zip, extraído em disco antes de ler o XML)</td><td><code>I_ID_REQ, I_CHV_ACC, I_COD_CLI</code></td><td><code>E_REQ_XML</code> + <code>E_RC</code></td></tr>
+          <tr><td><code>FECI_RFC_GET_TEC_BY_NCM</code></td><td><code>/ics/tec/{ncm}</code></td><td><code>I_NCM, I_CHV_ACC, I_COD_CLI</code></td><td><code>E_TEC_XML</code> + <code>E_RC</code></td></tr>
+          <tr><td><code>FECI_RFC_GET_ST_BY_NCM</code></td><td><code>/ics/st/{ncm}/{from}[/{to}]</code></td><td><code>I_NCM, I_FROM, I_TO, I_CHV_ACC, I_COD_CLI</code></td><td><code>E_ST_XML</code> + <code>E_RC</code></td></tr>
+        </table>
+
+        <h4>Pontos de atenção para troubleshooting</h4>
+        <table>
+          <tr><th>Função</th><th>Comportamento</th></tr>
+          <tr><td><code>funcEGR_GET_NFSE_WEB</code> (<code>FGR_GET_NFSE_WEB</code>)</td><td>O corpo inteiro do método está comentado no código. A função existe e pode ser chamada pelo SAP, mas <b>não executa nada e não retorna nenhum parâmetro de saída</b> — se o SAP espera um PDF/XML dessa chamada, ele nunca virá, e não há log nem erro que aponte a causa.</td></tr>
+          <tr><td><code>FXBR_READ_EPP_INFO</code> / <code>FGRF_READ_EPP_INFO</code></td><td>Mesma situação — corpo comentado, lê o XML de entrada mas não o processa e não seta nenhuma saída.</td></tr>
+          <tr><td><code>funcEIT_SIEGCONSULT</code> (<code>FGR_SIEGCONSULT</code>)</td><td>O código verifica <code>varclsOpenMail.ConsultaRealizada</code> para decidir o nível do log — mas quem efetivamente processou a chamada foi <code>varclsModuleNfe</code> (<code>clsModuloNFe.funcConsultaDocsSieg</code>); <code>varclsOpenMail</code> nunca é usado para nada além dessa checagem, então essa flag está sempre no valor padrão (<code>false</code>). Na prática, essa função sempre grava o log de fim como erro, independentemente do resultado real da consulta — o log não é confiável para saber se a consulta Sieg funcionou.</td></tr>
+          <tr><td><code>funcEIT_MDSCRAPNFE</code> (<code>FGR_MDSCRAPNFE</code> / <code>FGRF_MDSCRAPNFE</code>)</td><td>Faz <i>web scraping</i> direto do portal da SEFAZ (<code>nfe.fazenda.gov.br</code>) usando uma biblioteca de scraping com autenticação de proxy. O valor de autenticação tem um <b>literal de credencial embutido no código-fonte como valor padrão</b> (<code>clsFunction.Env("AUTH", "brd-customer-...")</code> — só é substituído se houver uma variável de ambiente <code>AUTH</code> configurada). O bloco <code>catch</code> está vazio — qualquer falha é engolida silenciosamente, sem log e sem retorno ao SAP.</td></tr>
+          <tr><td><code>FGTS_SENDFILE</code></td><td>Grava o log de início com categoria <code>"EGTS"</code> e o log de fim com categoria <code>"EGTX"</code> (sem o S final) — quem filtra o log só por <code>"EGTS"</code> não vê a linha de encerramento dessa função.</td></tr>
+          <tr><td><code>FGTE_DUE_INSERT / FGTE_DUE_CHANGE</code></td><td>Não têm try/catch nem chamada de log ao redor da criação/execução do objeto DUE. Uma exceção lançada durante o handshake de autenticação ou durante o envio propaga sem tratamento local — o comportamento resultante depende de como o SAP NCo trata exceções não capturadas em uma <code>RfcServerFunction</code> (tipicamente reportadas como erro de sistema para o SAP, sem a mensagem de negócio formatada que as demais funções produzem).</td></tr>
+          <tr><td>Bypass de validação de certificado do servidor</td><td>Confirmado em pelo menos 3 pontos: <code>clsModuloNFe.funcDownloadDoc</code> (NFe/SEFAZ), <code>DUE.DUEREST</code>/<code>DUEAuthentication</code> (Siscomex) e agora também <code>GetRegionConfiguration</code> (GNRE, inline). Ver <a href="#mod-cer" onclick="go('mod-cer')">Certificados &amp; segurança</a>.</td></tr>
+        </table>
+      </section>
+
+      <section id="abap-crossref">
+        <h3 style="font-size:22px;">Cruzamento ABAP ⇄ .NET (classe /XEGR/CLEGR_EDX)</h3>
+        <p>33 métodos exportados da classe ABAP. A tabela mostra, para cada um, quais Function Modules ele chama via <code>CALL FUNCTION '...' DESTINATION</code> — e se esse FM tem correspondente confirmado em <code>clsSAPServerFun</code> (cruza para o .NET) ou parece ser puramente do lado SAP.</p>
+        <table>
+          <tr><th>Método ABAP</th><th>Function Modules chamados</th><th>Cruza para .NET?</th></tr>
+          <tr><td><code>CONSTRUCTOR</code></td><td>— (só <code>SELECT</code> na tabela <code>/xegr/tgr_conn</code>, carrega config de conexões em memória)</td><td>não</td></tr>
+          <tr><td><code>GET_RFC_DESTINATION</code></td><td>— (resolve destino por bukrs/branch/function, com fallback via <code>/xegr/clgr_tools=&gt;get_mdcfg</code>)</td><td>não</td></tr>
+          <tr><td><code>MDDOWNNFE</code></td><td><code>/XEGR/FGR_MDDOWNNFE</code></td><td><b>Sim</b> — ver <a href="#estudo-caso" onclick="go('estudo-caso')">estudo de caso</a></td></tr>
+          <tr><td><code>MDGETDOCS</code></td><td><code>/XEGR/FGR_MDCONSNFE</code> (+ FMs internos SAP: <code>FGR_CANCEL_BY_EVENT</code>, <code>FGR_GETPARTNER</code>, <code>FJEGRNFOUT</code>, <code>FJNFEXMVLD</code>)</td><td><b>Parcial</b> — só <code>FGR_MDCONSNFE</code> cruza</td></tr>
+          <tr><td><code>MDGETNFSEDOC</code></td><td><code>/XEGR/FGR_MDCONSNFSE</code> (+ FMs internos: <code>FGR_CANCEL_BY_EVENT</code>, <code>FGR_GETPARTNER</code>)</td><td><b>Parcial</b></td></tr>
+          <tr><td><code>DOWNNFSEPDF</code></td><td><code>/XEGR/FGR_DOWNPDFNFSE</code></td><td><b>Sim</b></td></tr>
+          <tr><td><code>READ_NFSE</code></td><td><code>/XEGR/FGR_GET_NFSE</code></td><td><b>Sim</b></td></tr>
+          <tr><td><code>READ_NFSE_FROM_WEBLINK</code></td><td><code>/XEGR/FGR_GET_NFSE_WEB</code></td><td><b>Sim</b></td></tr>
+          <tr><td><code>SIGN_NFSE_XML</code></td><td><code>/XEGR/FGR_SIGN_NFS</code></td><td><b>Sim</b></td></tr>
+          <tr><td><code>PROTOCNFE</code></td><td><code>/XEGR/FGR_PROTOCNFE</code> (+ FMs internos SAP: <code>CONSPROT_DRC, FGR_CANCEL, FGR_GET_GENERIC_VERSION, FGR_SAVE_HIST</code>)</td><td><b>Parcial</b></td></tr>
+          <tr><td><code>MDSRVSTAT</code></td><td><code>/XEGR/FGR_CONSTSERV</code> (+ <code>FGR_NFVERSION_BRANCH</code> interno SAP)</td><td><b>Parcial</b></td></tr>
+          <tr><td><code>PDF_TO_XML</code></td><td><code>/XEGR/FGR_CVPDFTOXML</code></td><td><b>Sim</b></td></tr>
+          <tr><td><code>TRYCONNEC</code></td><td><code>/XEGR/FGR_RFCTESTCN</code> (+ <code>J_1B_NFE_CHECK_RFC_DESTINATION</code>, FM padrão SAP)</td><td><b>Sim</b></td></tr>
+          <tr><td><code>TRYCONN_MAIL</code></td><td><code>/XEGR/FGR_MAILCONECT</code></td><td><b>Sim</b></td></tr>
+          <tr><td><code>GETXMLMAIL</code></td><td><code>/XEGR/FGR_MDCONSMAIL</code>, <code>/XEGR/FGR_MDDELEMAIL</code> (+ FMs internos)</td><td><b>Sim (2 Function Modules)</b></td></tr>
+          <tr><td><code>SEND_MANIFEST_MAIL</code> / <code>_V2</code></td><td><code>/XEGR/FGR_SEND_GR_MAILS</code></td><td><b>Não localizado no lado .NET</b> — provável FM só-SAP ou implementado em versão do código não incluída</td></tr>
+          <tr><td><code>GETXMLGRC</code></td><td><code>/XEGR/FGR_GETXMLGRC</code></td><td><b>Não localizado no lado .NET</b></td></tr>
+          <tr><td><code>GETXMLGRCNFE</code></td><td><code>/XEGR/FGR_GETXMLLST</code> (+ FMs internos)</td><td><b>Não localizado no lado .NET</b></td></tr>
+          <tr><td><code>CONSPARTN</code></td><td><code>XEGRFGR_MDCONSCAD</code> (provável <code>/XEGR/FGR_MDCONSCAD</code>)</td><td><b>Sim</b></td></tr>
+          <tr><td><code>SENDMAILRJ</code></td><td>FMs padrão SAP (conversão binário/xstring, script HTML) — sem chamada a <code>/XEGR/</code></td><td>não</td></tr>
+          <tr><td><code>SET_INDICATOR</code></td><td><code>SAPGUI_PROGRESS_INDICATOR</code> (FM padrão SAP, cosmético)</td><td>não</td></tr>
+          <tr><td>Demais (<code>EVENTCONV, GETADDLIST, GET_INSTANCE, IS_SAPGRCNFE, MDEVENNFE, PROCESS_DOCCOB, PROCESS_NFSE, RECORDEVT, RECORDEVT_V2, SEND_MANIFEST_MAIL_V2, SET_MDCFG</code>)</td><td>sem <code>CALL FUNCTION ... DESTINATION</code> direto no corpo do método — lógica local/DB ou chamam métodos internos da própria classe ABAP</td><td>não determinado</td></tr>
+        </table>
+      </section>
+
+      <section id="estudo-caso">
+        <h3 style="font-size:22px;">Estudo de caso completo: download de XML de NFe (MDDOWNNFE)</h3>
+        <p>Rastreio ponta-a-ponta do método ABAP até a chamada de negócio em C#, ilustrando como o cruzamento SAP⇄.NET pode ser seguido diretamente no código.</p>
+        <div class="mermaid">
+sequenceDiagram
+  participant ABAP as SAP/ABAP
+  participant DB as Tabelas SAP
+  participant RFC as Gateway RFC
+  participant SF as clsSAPServerFun
+  participant NFe as clsModuloNFe
+  participant LOG as clsSystemLog
+
+  ABAP->>DB: SELECT lw_txmlk WHERE id = i_chavenf
+  ABAP->>DB: SELECT lw_mdcfg (config da filial)
+  ABAP->>ABAP: J_1B_BRANCH_READ (obtém CNPJ)
+  ABAP->>ABAP: get_rfc_destination(bukrs, branch, 'MDDOWNNFE')
+  ABAP->>RFC: CALL FUNCTION '/XEGR/FGR_MDDOWNNFE' DESTINATION rfcdt<br/>EXPORTING pambgov, pcodemp, pcnpjdt, pnfchav
+  RFC->>SF: dispara funcEGR_MDDOWNNFE → funcEIT_MDDOWNNFE
+  SF->>LOG: log "início de chamada RFC"
+  SF->>NFe: varclsManifesto.funcDownloadDoc(pRfcFunction, clsActualItem)
+  NFe-->>SF: retorno (string) + ConsultaRealizada (bool)
+  SF->>LOG: log sucesso/erro conforme ConsultaRealizada
+  SF-->>RFC: pstaret, pmotret, pproret, tabela tb_xmlmd
+  RFC-->>ABAP: resposta síncrona
+  ABAP->>ABAP: se pstaret='140' e tabela vazia → getxmlgrc (retry, até 5x, 1s entre tentativas)
+  ABAP->>ABAP: monta hierarquia XML e grava em /xegr/txmlk
+        </div>
+        <table>
+          <tr><th>Etapa</th><th>Arquivo / linha</th><th>Confiabilidade</th></tr>
+          <tr><td>Resolução do destino RFC</td><td><code>GET_RFC_DESTINATION.txt</code></td><td></td></tr>
+          <tr><td>Chamada RFC de saída</td><td><code>MDDOWNNFE.txt</code></td><td></td></tr>
+          <tr><td>Recepção no .NET, roteamento EGR→EIT</td><td><code>clsSAPServerFun.cs:246-289</code></td><td></td></tr>
+          <tr><td>Delegação para regra de negócio</td><td><code>clsSAPServerFun.cs:259</code> — <code>clsModuloNFe.funcDownloadDoc(...)</code></td><td><b>Confirmado</b> <b>Detalhamento pendente</b></td></tr>
+          <tr><td>Retry no lado ABAP se resposta vier vazia</td><td><code>MDDOWNNFE.txt</code> — laço <code>DO 5 TIMES</code> chamando <code>getxmlgrc</code></td><td></td></tr>
+        </table>
+        <div class="callout warn"><b>Observação de robustez:</b> o retry (até 5 tentativas, 1s de espera) acontece <b>do lado SAP</b>, não do lado .NET — o <code>clsSAPServerFun</code> não tem lógica de retry própria nesse fluxo; se <code>funcDownloadDoc</code> falhar silenciosamente, quem insiste é o ABAP via <code>getxmlgrc</code>, um FM diferente (<code>/XEGR/FGR_GETXMLGRC</code>) que <b>não foi localizado</b> em <code>clsSAPServerFun</code> — candidato a investigar na próxima fase.</div>
+      </section>
+
+      <!-- MODULE STUBS -->
+      <section id="mod-nfe">
+        <h2>Módulo NFe — recepção / manifestação / cancelamento</h2>
+        <p><code>clsModuloNFe.cs</code> (2975 linhas) é a classe orquestradora do módulo — toda função RFC de NFe/CTe da tabela do <a href="#rfc-catalog" onclick="go('rfc-catalog')">catálogo</a> desemboca em um método público desta classe (detalhamento completo de <code>funcDownloadDoc</code> disponível no <a href="#estudo-caso" onclick="go('estudo-caso')">estudo de caso</a>).</p>
+
+        <table>
+          <tr><th>Método</th><th>Operação</th><th>Observação</th></tr>
+          <tr><td><code>funcConsultaCad</code></td><td>Consulta de cadastro de contribuinte</td><td>mapeia <code>FGR_MDCONSCAD</code></td></tr>
+          <tr><td><code>funcConsultaDocs / _EDX / _Sieg / _SystaxDFe / _CTe</code></td><td>Consulta de documentos — <b>5 variantes</b> conforme provedor de distribuição usado pela empresa</td><td>EDX = SEFAZ direto; Sieg e SystaxDFe = provedores terceirizados de distribuição de XML; CTe = variante para conhecimento de transporte</td></tr>
+          <tr><td><code>funcDownloadDoc</code></td><td>Download do XML de uma NFe específica pela chave</td><td>detalhado no <a href="#estudo-caso" onclick="go('estudo-caso')">estudo de caso</a> — usa <code>distDFeInt</code> / <code>nfeDistDFeInteresse</code> (SOAP SEFAZ)</td></tr>
+          <tr><td><code>funcConsultaNSU</code></td><td>Consulta por NSU (Número Sequencial Único) — usado para varrer todo o histórico, não só uma chave</td><td>&nbsp;</td></tr>
+          <tr><td><code>funcManifestoDoc / _EDX / _EDX2 / _SystaxDFe</code></td><td>Manifestação do destinatário (ciência, confirmação, desconhecimento, operação não realizada)</td><td>4 variantes — <code>_EDX2</code> sugere uma segunda geração da mesma lógica ainda coexistindo com a original</td></tr>
+          <tr><td><code>funcSefazSend / funcSefazSendXML</code> (2 sobrecargas)</td><td>Envio genérico de XML assinado para a SEFAZ</td><td>a versão pública com tupla <code>(xmlReturned, Retorno)</code> parece ser reuso interno fora do fluxo RFC</td></tr>
+          <tr><td><code>funcSefazAssign / funcSefazAssignXML</code></td><td>Assinatura digital de XML</td><td>mapeia <code>FGR_SIGN_XML</code></td></tr>
+          <tr><td><code>funcSignXML / funcSignXML_NFS / funcSignXMLStr_NFS</code></td><td>Assinatura — variante específica para NFSe também vive nesta classe (não em NFSe/)</td><td><b>Acoplamento entre módulos</b>: assinatura de NFSe está fisicamente em <code>clsModuloNFe</code>, não em <code>clsNFSeManager</code></td></tr>
+          <tr><td><code>funcConvertPDFtoXML</code></td><td>Extração de dados de PDF de NFe para XML</td><td>mapeia <code>FGR_CVPDFTOXML</code></td></tr>
+          <tr><td><code>funcConsultaProt / _NFe / _NFe2 / _CTe / _SystaxDFe</code></td><td>Consulta de protocolo de autorização — 4 variantes por versão de schema/provedor</td><td>&nbsp;</td></tr>
+          <tr><td><code>funcCheckSignature</code></td><td>Verificação de assinatura de XML recebido</td><td>mapeia <code>FGR_CHECKSIGN</code></td></tr>
+          <tr><td><code>funcConsultaStatusServico</code></td><td>Status do serviço SEFAZ (verifica se o webservice está no ar antes de tentar operações)</td><td>mapeia <code>FGR_CONSTSERV</code></td></tr>
+          <tr><td><code>funcSefazPost</code></td><td>Envio HTTP POST de baixo nível ao SEFAZ</td><td>usado internamente pelas variantes acima</td></tr>
+        </table>
+
+        <h3>Padrão comum, confirmado em <code>funcDownloadDoc</code></h3>
+        <p>Todo método de comunicação com a SEFAZ segue o mesmo esqueleto: <b>(1)</b> checa conectividade (<code>clsFunction.funcInternetIsOnline()</code>) <b>(2)</b> resolve o certificado digital da empresa/CNPJ (<code>pclsConfigItem.funcGetCertificate</code>) <b>(3)</b> resolve a URL/versão do webservice por UF e ambiente via <code>clsNFeWbsConfig.funcGetXMLParameters</code> <b>(4)</b> monta o XML de envio como string concatenada <b>(5)</b> cria o cliente SOAP tipado (classes <code>clsNFeConsDocs</code>, <code>clsNFeDownload</code> etc., geradas a partir do WSDL da SEFAZ) com o certificado anexado <b>(6)</b> chama o webservice <b>(7)</b> lê <code>cStat</code>/<code>xMotivo</code> da resposta e decide sucesso/erro <b>(8)</b> grava os campos de saída na função RFC (<code>PSTARET</code>, <code>PMOTRET</code>) para o SAP ler de volta.</p>
+
+        <div class="callout warn"><b>Achado de segurança (ver detalhe em <a href="#mod-cer" onclick="go('mod-cer')">Certificados &amp; segurança</a>):</b> em <code>funcDownloadDoc</code>, a validação do certificado <i>do servidor</i> SEFAZ é explicitamente desabilitada: <code>ServicePointManager.ServerCertificateValidationCallback = clsValidadeCertificatePolicy.NotValidServerCertficate</code>, método que sempre retorna <code>true</code>. Isso significa que a comunicação HTTPS com a SEFAZ não valida se o certificado apresentado pelo servidor é confiável — está sujeita a MITM caso a rede não seja de confiança.</div>
+
+        <h3>Roteamento SAP → operação</h3>
+        <p>O roteamento é feito inteiramente por <code>clsSAPServerFun</code> (ver <a href="#rfc-catalog" onclick="go('rfc-catalog')">catálogo</a>): cada <code>[RfcServerFunction]</code> chama exatamente um dos métodos acima. As múltiplas variantes (<code>_EDX</code>, <code>_Sieg</code>, <code>_SystaxDFe</code>) não são escolhidas dinamicamente dentro de <code>clsModuloNFe</code> — a escolha de qual variante usar é feita no lado ABAP ou por qual função RFC foi chamada, não foi possível confirmar qual exatamente.</p>
+      </section>
+      <section id="mod-nfse">
+        <h2>Módulo NFSe</h2>
+        <p><code>clsNFSeManager.cs</code> é a orquestradora (mapeia <code>FGR_GET_NFSE</code>/<code>FGR_MDCONSNFSE</code> do catálogo). Métodos:</p>
+        <table>
+          <tr><th>Método</th><th>Papel</th></tr>
+          <tr><td><code>funcGetNFSe</code></td><td>Ponto de entrada RFC — obtém a NFSe (provavelmente decide, por config da empresa, qual das ~9 integrações de prefeitura usar)</td></tr>
+          <tr><td><code>funcReadFileStream</code> (2 sobrecargas)</td><td>Leitura de arquivo (XML ou PDF) recebido de uma prefeitura</td></tr>
+          <tr><td><code>funcSaveSAPContent</code> (privado)</td><td>Grava o conteúdo lido de volta na estrutura que retorna ao SAP</td></tr>
+        </table>
+        <p>A pasta contém <b>9 clientes SOAP/REST distintos, um por padrão de prefeitura</b> — cada município brasileiro tende a ter seu próprio layout de webservice de NFSe (não existe um padrão nacional único, ao contrário da NFe): <code>clsNFSeWbsBetha</code>, <code>clsNFSeWbsBH</code> (Belo Horizonte), <code>clsNFSeWbsEquiPlano</code>, <code>clsNFSeWbsGINFES</code>, <code>clsNFSeWbsRecife</code>, <code>clsNFSeWbsRio</code>, <code>clsNFSeWbsSP</code> + variante <code>clsNFSeWbsSP_Roca</code>, <code>NFSeWbsAmericana</code>. não está determinado qual classe chama qual — plausivelmente uma factory por código de município em <code>clsNFSeManager</code> ou em <code>funcGetNFSe</code>, não confirmado em detalhe.</p>
+        <p>Subpasta <code>PDFWebReader/</code> (<code>DirectNfseReader</code>, <code>GinfesNfseReader</code>, <code>HtmlParser</code>, <code>NfsePdfWebReaderFactory</code>) é um mecanismo <b>separado</b> — screen-scraping de páginas HTML/PDF de portais de prefeitura que não expõem um webservice SOAP formal. A existência de uma <i>Factory</i> aqui (<code>NfsePdfWebReaderFactory</code>) confirma o padrão factory-by-city, mas só para este caminho alternativo. Mapeamento por prefeitura, tratamento de erro por código de retorno de cada padrão: fica para uma passada dedicada se for necessário mexer numa integração municipal específica.</p>
+      </section>
+      <section id="mod-siscomex">
+        <h2>DUE / DUIMP (Siscomex)</h2>
+        <p>Fluxo confirmado por leitura completa de <code>DUEAuthentication.loginHandshake</code> e <code>DueREST.dueRequest</code>.</p>
+        <div class="mermaid">
+sequenceDiagram
+  participant SF as clsSAPServerFun
+  participant AUTH as DUEAuthentication
+  participant SISC as Siscomex
+  participant REST as DUEREST
+  participant OP as DUECreate/Consult/Rectify
+
+  SF->>AUTH: loginHandshake(function, profile)
+  AUTH->>AUTH: funcGetCertificateECPF(cpfEmi)<br/>certificado e-CPF do responsável
+  AUTH->>SISC: POST mTLS<br/>ClientCertificates += e-CPF
+  SISC-->>AUTH: Set-Token, X-CSRF-Token,<br/>X-CSRF-Expiration
+  AUTH->>AUTH: guarda em static<br/>SetToken / CSRF
+  SF->>OP: createDUE() / consultDUE()<br/>/ rectifyDUE()
+  OP->>REST: dueRequest(url, method, xml)
+  REST->>SISC: HTTP + Authorization<br/>/ X-CSRF-Token
+  SISC-->>REST: XML de resposta<br/>(ou erro)
+  REST-->>OP: DUEReturn{Success, Data,<br/>ErrorCode...}
+  OP-->>SF: sapReturn(function)<br/>grava saída RFC
+        </div>
+        <table>
+          <tr><th>Classe</th><th>Papel</th></tr>
+          <tr><td><code>DUEAuthentication</code></td><td>Handshake: autentica com <b>certificado e-CPF</b> (não e-CNPJ) via mTLS, guarda token/CSRF <b>estáticos</b> na classe (válidos entre chamadas até expirar)</td></tr>
+          <tr><td><code>DUEREST</code></td><td>Chamador HTTP genérico (2 sobrecargas) — usa TLS 1.2 explícito e o mesmo bypass de validação de certificado do servidor (<code>NotValidServerCertficate</code>)</td></tr>
+          <tr><td><code>DUEConsult</code></td><td><code>consultDUE / consultDUEJob / consultDUEAll / consultDUEAllJob / AuthDue</code> — variantes "Job" sugerem execução em lote/background distinta da consulta unitária síncrona</td></tr>
+          <tr><td><code>DUECreate</code></td><td><code>createDUE()</code> — criação de Declaração Única de Exportação</td></tr>
+          <tr><td><code>DUERectify</code></td><td><code>rectifyDUE()</code> — retificação de DUE já criada</td></tr>
+          <tr><td><code>DUEReturn</code></td><td>DTO de retorno padronizado, com <code>sapReturn(IRfcFunction)</code> — todo fluxo DUE converge para esse único método de devolução ao SAP</td></tr>
+        </table>
+        <p><b>DUIMP</b> (Declaração Única de Importação) tem estrutura irmã em <code>SISCOMEX/DUIMP/</code>: <code>DuimpAuthentication</code>, <code>DuimpREST</code>, <code>DuimpReturn</code>, <code>DuimpSend</code> — presume-se estrutura equivalente à DUE (mesmo padrão de handshake+REST), a confirmar em detalhe. A pasta também contém <code>connectGPT.cs</code>/<code>connectGPT_Azure</code>, indicando uso de IA generativa (OpenAI ou Azure OpenAI) como apoio ao preenchimento/classificação de itens da DUIMP — corpo do arquivo a detalhar.</p>
+        <div class="callout"><b>Ponto de atenção operacional:</b> como o token CSRF/Set-Token fica em campos <code>static</code> de <code>DUEAuthentication</code> (não por thread nem por empresa), múltiplas empresas ou chamadas concorrentes no mesmo processo do Windows Service podem competir pelo mesmo token — coerente com a decisão arquitetural já observada de "uma instância do serviço por empresa" (ver <a href="#edx-srv-lifecycle" onclick="go('edx-srv-lifecycle')">ciclo de vida</a>), mas vale confirmar se DUE é chamado de múltiplas threads dentro do mesmo processo.</div>
+      </section>
+      <section id="mod-mail">
+        <h2>E-mail (MAIL)</h2>
+        <p><code>clsOpenMail.cs</code> (1331 linhas) — métodos identificados por assinatura; nem todos os corpos foram detalhados linha a linha.</p>
+        <table>
+          <tr><th>Método</th><th>Papel</th></tr>
+          <tr><td><code>funcGetConType</code></td><td>Lê da função RFC qual protocolo/config usar (IMAP, POP3, OpenPOP, EWS/Exchange, Graph/O365)</td></tr>
+          <tr><td><code>funcGetConnnect</code></td><td><b>Multiprotocolo</b>: abre conexão real conforme <code>strConType</code> — suporta 5 clientes diferentes na mesma classe (<code>Imap</code>, <code>Pop3</code>, <code>OpenPop.Pop3.Pop3Client</code>, <code>ExchangeService</code>, mais OAuth2/Graph)</td></tr>
+          <tr><td><code>funcTestConnection</code> (2 sobrecargas)</td><td>Testa credenciais/conectividade — mapeia <code>FGR_MAILCONECT</code></td></tr>
+          <tr><td><code>funcRequestEmail</code></td><td>Ponto de entrada principal (~430 linhas) — lê e-mails da caixa, mapeia <code>FGR_MDCONSMAIL</code></td></tr>
+          <tr><td><code>funcDeleteEmail</code></td><td>Remove e-mail já processado — mapeia <code>FGR_MDDELEMAIL</code></td></tr>
+          <tr><td><code>funcSaveEmail</code> (3 sobrecargas)</td><td>Persiste o e-mail lido — uma sobrecarga por tipo de mensagem: <code>Limilabs.Mail.IMail</code>, <code>OpenPop.Mime.Message</code>, <code>Item</code> (EWS) — o mesmo dado de negócio é normalizado a partir de 3 bibliotecas de terceiros distintas</td></tr>
+          <tr><td><code>funcReadXMLExchangeFolder</code></td><td>Varre pasta específica via Exchange Web Services</td></tr>
+          <tr><td><code>LoginO365</code></td><td>Autenticação OAuth2 contra Microsoft 365/Graph — caminho moderno, substituindo usuário/senha simples</td></tr>
+          <tr><td><code>funcCertificateValidator</code> (2 sobrecargas, privadas)</td><td>Validadores de certificado TLS — ver nota de segurança abaixo</td></tr>
+        </table>
+        <div class="callout warn"><b>Mesmo padrão de segurança do módulo NFe/DUE:</b> os validadores privados de certificado desta classe seguem o padrão observado em <code>clsValidadeCertificatePolicy</code> (ver <a href="#mod-cer" onclick="go('mod-cer')">próxima seção</a>) — nomes e assinatura (<code>ServerCertificateValidateEventArgs</code>, <code>SslPolicyErrors</code>) indicam o mesmo tipo de bypass; não confirmado em detalhe.</div>
+        <p>O código embarca <b>bibliotecas de terceiros completas como código-fonte</b> (não como DLL/NuGet) nos projetos <code>OpenPop</code> e <code>OpenImap</code>, mais uma licença comercial da LimiLabs (pasta <code>LimiLabs - License Key</code>) — ou seja, o cliente IMAP/SMTP "Limilabs.Mail" usado em <code>funcSaveEmail(IMail...)</code> é comercial licenciado, enquanto POP3/IMAP "OpenPop"/"OpenImap" são bibliotecas open-source vendorizadas.</p>
+      </section>
+      <section id="mod-cer">
+        <h2>Certificados &amp; segurança</h2>
+        <table>
+          <tr><th>Classe</th><th>Papel</th></tr>
+          <tr><td><code>clsCertificado</code></td><td>DTO simples: <code>X509Certificate2</code>, Titular, CPF, CNPJ, Tipo, SerialNumber — representa um certificado carregado</td></tr>
+          <tr><td><code>CertificateValidate</code></td><td><code>ConsultCertificate</code> (2 sobrecargas) — valida um certificado da empresa (por <code>clsConfigItem</code> ou por <code>InfoCertificate</code> direto)</td></tr>
+          <tr><td><code>clsValidadeCertificatePolicy</code></td><td>Implementa <code>ICertificatePolicy</code> — política de validação de certificado <b>do servidor remoto</b> usada pelos clientes HTTP/SOAP do sistema</td></tr>
+          <tr><td><code>clsCertificadosInstalados</code></td><td>Lista certificados instalados no repositório do Windows (não detalhado)</td></tr>
+        </table>
+
+        <div class="callout warn">
+          <b>Nota de segurança — confirmado em 3 pontos independentes do código:</b><br><br>
+          <code>clsValidadeCertificatePolicy.NotValidServerCertficate(...)</code> <b>sempre retorna <code>true</code></b>, independente do resultado real da validação de cadeia/TLS:
+          <pre><code>public static bool NotValidServerCertficate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors policyErrors) {
+    return true;
+}</code></pre>
+          Esse método é atribuído a <code>ServicePointManager.ServerCertificateValidationCallback</code> em pelo menos três fluxos confirmados: <code>clsModuloNFe.funcDownloadDoc</code> (comunicação com SEFAZ), <code>DUEAuthentication.loginHandshake</code> e <code>DUEREST.dueRequest</code> (comunicação com Siscomex). Na prática, isso desliga a checagem de que o servidor remoto (SEFAZ/Siscomex) é quem diz ser — o TLS ainda criptografa o canal, mas não impede um ataque man-in-the-middle com certificado forjado.<br><br>
+          Existe também um método legado <code>ValidateServerCertficate</code> (marcado <code>[Obsolete]</code>) que respeita <code>SslPolicyErrors.None</code> a menos que a chave <code>IgnoreSslErrors</code> do <code>app.config</code> esteja ativa — ou seja, o sistema <i>já teve</i> uma validação correta e opcional, e o código atual usa a versão que sempre ignora.<br><br>
+          Se isso for intencional (por exemplo, para lidar com certificados intermediários da SEFAZ mal configurados em produção — problema comum no ecossistema fiscal brasileiro), recomenda-se documentar a decisão explicitamente no código; caso contrário, trata-se de uma vulnerabilidade a corrigir.
+        </div>
+
+        <p><b>Autenticação por certificado do cliente (mTLS)</b> é usada de duas formas distintas: certificado e-CNPJ da empresa (<code>pclsConfigItem.funcGetCertificate</code>, usado em NFe/NFSe/EGRF) e certificado e-CPF do responsável (<code>profile.funcGetCertificateECPF</code>, usado em DUE/DUIMP) — o corpo desses dois métodos de resolução de certificado (prováveis em <code>clsConfigItem.cs</code>) não documentado em detalhe — não é possível confirmar de onde exatamente o certificado é carregado (Windows Certificate Store vs arquivo .pfx).</p>
+      </section>
+      <section id="mod-outros">
+        <h2>CTe · MDFe · GNRE · FCI · EGRF/EGTS</h2>
+        <p>Cada um documentado a partir de sua classe orquestradora. por leitura de assinaturas.</p>
+
+        <h3>CT-e (Conhecimento de Transporte)</h3>
+        <p><code>CTE/Controller.cs</code>: <code>manifestoDocCTe</code> e <code>manifestoDocCTe2</code> (<code>internal static</code> — só acessíveis dentro do assembly, chamadas via <code>clsModuloNFe.funcConsultaDocsCTe</code>/<code>funcConsultaProtCTe</code>, que reusam a infraestrutura de NFe para o fluxo de CT-e). Confirma que <b>CT-e não tem orquestrador RFC próprio</b> — ele é tratado como uma variação do módulo NFe.</p>
+
+        <h3>MDF-e (Manifesto de Documentos Fiscais)</h3>
+        <p><code>MDFE/clsModuleMDFe.cs</code>: <code>funcConsultaDocs</code> (mapeia <code>GET_MDFE_58</code>) e <code>SaveMDFeDocument</code> (grava o XML retornado). Módulo mais enxuto dos seis — só uma operação de consulta/download, sem manifestação/cancelamento próprios encontrados nesta classe.</p>
+
+        <h3>GNRE (Guia Nacional de Recolhimento de Tributos Estaduais)</h3>
+        <p><code>GNRE/clsModuleGNRE.cs</code>: <code>batchTransmitRequest</code> e <code>batchTransmitResponse</code> — mapeiam exatamente <code>FGNRE_BATCH_TRANSMIT</code> e <code>FGNRE_BATCH_TRANSMIT_RES</code> do catálogo. Padrão <b>request/response assíncrono em lote</b>: o SAP dispara o lote (request) e depois consulta o resultado (response) numa segunda chamada — não é síncrono como a maioria dos outros fluxos.</p>
+
+        <h3>FCI (Ficha de Conteúdo de Importação)</h3>
+        <p><code>FCI/clsModuloFCI.cs</code> — o módulo com <b>fluxo de estágios mais explícito</b> de toda a base, 5 métodos em sequência clara: <code>funcSimularArquivo → funcValidarArquivo → funcGerarMidiaArquivo → funcRecuperarMidiaArquivo → funcTransmitirArquivo</code>, com flags de estado correspondentes (<code>ArquivoSimulado</code>, <code>ArquivoValidado</code>, <code>GeradoMidiaArquivo</code>, <code>ArquivoTransmitido</code>). Usa a biblioteca oficial da Fazenda de SP embarcada: <code>Br.Gov.Sp.Fazenda.CCI.ValidadorFCI</code> — ou seja, a validação de FCI não é reimplementada, é delegada ao validador oficial do governo. Subpasta <code>GOV/</code> tem ~15 classes de layout de arquivo (estrutura posicional do arquivo-mídia FCI).</p>
+        <div class="mermaid">
+graph LR
+  A[funcSimularArquivo] --> B[funcValidarArquivo]
+  B --> C[funcGerarMidiaArquivo]
+  C --> D[funcRecuperarMidiaArquivo]
+  D --> E[funcTransmitirArquivo]
+        </div>
+
+        <h3>EGRF (e-Gestão de Riscos Fiscais / Programação de Embarque)</h3>
+        <p><code>EGRF/Controller.cs</code>: <code>sendEventNFe</code>, <code>docConsultSefaz</code> (ambos <code>internal static</code>, retornam <code>EGRFreturn</code>) e um método privado <code>assinar(xml, certificate)</code> — <b>ponto de assinatura digital próprio</b>, dedicado a este módulo, separado da assinatura genérica de <code>clsModuloNFe</code>. Mapeia as funções <code>FGRF_*</code> do catálogo.</p>
+
+        <h3>EGTS / Siscoserv</h3>
+        <p><code>EGTS/clsModuloSiscoServ.cs</code>: <code>funcSendFile</code> (mapeia <code>FGTS_SENDFILE</code>) e <code>funcGetStatus</code> (mapeia <code>FGTS_GETSTATU</code>), mais <code>funcCheckSchema</code>/<code>ValidationEventHandler</code> — <b>validação de XSD explícita antes do envio</b>, único módulo onde essa validação de schema aparece nomeada dessa forma no orquestrador (os outros módulos validam implicitamente via biblioteca de terceiros ou não validam localmente).</p>
+
+        <div class="callout"><b>Padrão transversal observado nos 6 módulos:</b> cada um tem exatamente uma classe orquestradora "fina" (<code>Controller</code> ou <code>clsModulo*</code>) que <code>clsSAPServerFun</code> chama diretamente, e a complexidade real (parsers de layout, clientes SOAP gerados, regras de schema) fica em classes auxiliares na mesma pasta — nenhuma delas foi detalhada corpo a corpo neste documento.</div>
+      </section>
+
+      <!-- METODOLOGIA -->
+      <section id="metodologia">
+        <h2>Fontes e rastreabilidade</h2>
+        <p>O conteúdo deste documento é derivado diretamente de duas fontes: o código-fonte .NET do E-DX e os métodos exportados da classe ABAP <code>/XEGR/CLEGR_EDX</code>. O cruzamento entre os dois lados foi feito por correspondência exata de nome entre as chamadas <code>CALL FUNCTION ... DESTINATION</code> do lado ABAP e os 78 métodos <code>[RfcServerFunction]</code> registrados em <code>clsSAPServerFun</code> do lado .NET (ver <a href="#rfc-catalog" onclick="go('rfc-catalog')">Catálogo de RFC Server Functions</a> e <a href="#abap-crossref" onclick="go('abap-crossref')">Cruzamento ABAP⇄.NET</a>).</p>
+        <p>Cada módulo de domínio foi documentado a partir de sua classe orquestradora — a classe que <code>clsSAPServerFun</code> chama diretamente para executar a operação de negócio. As classes auxiliares por trás de cada orquestrador (clientes SOAP gerados, parsers de layout específicos, integrações individuais por prefeitura no caso de NFSe, entre outras) não estão detalhadas linha a linha — ver <a href="#roadmap" onclick="go('roadmap')">Escopo e itens pendentes</a>.</p>
+      </section>
+
+      <section id="roadmap">
+        <h2>Escopo e itens pendentes</h2>
+        <table>
+          <tr><th>Área</th><th>Cobertura</th></tr>
+          <tr><td>Arquitetura geral, estrutura da solução, ponte SAP⇄.NET, catálogo de RFC, cruzamento ABAP⇄.NET</td><td>Documentado</td></tr>
+          <tr><td>Módulos de domínio: NFe, NFSe, DUE/DUIMP, E-mail, Certificados/segurança, CTe, MDFe, GNRE, FCI, EGRF, EGTS</td><td>Documentado a partir das classes orquestradoras</td></tr>
+          <tr><td><code>E-DX-API</code>/<code>E-DX-WEB</code> (rotas HTTP, contratos DTO, autenticação da API) e <code>E-DX</code> WinForms (telas de configuração/operação)</td><td>Pendente</td></tr>
+          <tr><td>Classes auxiliares de cada módulo (clientes SOAP gerados, parsers de layout específicos, cada integração de prefeitura da NFSe individualmente)</td><td>Pendente — detalhar sob demanda conforme necessidade de manutenção</td></tr>
+        </table>
+        <div class="callout verify"><b>Como usar este documento na prática:</b> a arquitetura, a ponte SAP⇄.NET e o ponto de entrada de cada módulo de domínio estão documentados e são a referência para localizar rapidamente onde uma alteração deve ser feita. Para investigações que exijam o "segundo nível" (uma classe auxiliar específica), use este documento para chegar até a classe orquestradora correta e então consulte o código-fonte diretamente a partir dali.</div>
+      </section>
+
+      <footer>
+        E-DX Internals · Documentação técnica interna · Equipe de Engenharia
+      </footer>
+    </div>
+  </div>
+</div>
+
+<div class="diagram-modal" id="diagramModal">
+  <div class="diagram-modal-toolbar">
+    <button onclick="diagramZoomBy(-0.15)" title="Diminuir">−</button>
+    <span class="zoom-level" id="zoomLevel">100%</span>
+    <button onclick="diagramZoomBy(0.15)" title="Aumentar">+</button>
+    <button onclick="diagramZoomReset()" title="Redefinir">⤢</button>
+    <span class="modal-hint">arraste para mover · Ctrl/⌘ + roda do mouse para zoom</span>
+    <button class="close-btn" onclick="closeDiagramModal()" title="Fechar (Esc)">✕</button>
+  </div>
+  <div class="diagram-modal-body" id="diagramModalBody"></div>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad:false,
+  theme:'base',
+  themeVariables:{
+    background:'#11151c',
+    primaryColor:'#171c25',
+    primaryTextColor:'#e7ebf1',
+    primaryBorderColor:'#232a35',
+    lineColor:'#5b8cff',
+    secondaryColor:'#171c25',
+    tertiaryColor:'#171c25',
+    fontFamily:'JetBrains Mono, monospace',
+    fontSize:'14px'
+  },
+  flowchart:{useMaxWidth:true, htmlLabels:true, nodeSpacing:30, rankSpacing:40},
+  sequence:{useMaxWidth:true, actorMargin:40, boxMargin:8, messageFontSize:13, noteFontSize:13, actorFontSize:13},
+  graph:{useMaxWidth:true}
+});
+mermaid.run().then(setupDiagramExpand).catch(()=>{});
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+const links = Array.from(document.querySelectorAll('.navlink'));
+function go(id){
+  const el = document.getElementById(id);
+  if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+  setActive(id);
+}
+function setActive(id){
+  links.forEach(l=>l.classList.toggle('active', l.dataset.target===id));
+  const active = links.find(l=>l.dataset.target===id);
+  if(active) document.getElementById('crumbCurrent').textContent = active.textContent.replace(/[✓✕].*/,'').trim().replace(/(próximo|pendente)$/,'').trim();
+}
+
+// scrollspy
+const sections = links.map(l=>document.getElementById(l.dataset.target)).filter(Boolean);
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){ setActive(e.target.id); }
+  });
+}, {rootMargin:'-20% 0px -70% 0px'});
+sections.forEach(s=>io.observe(s));
+
+// search filter
+function doSearch(q){
+  q = q.toLowerCase().trim();
+  links.forEach(l=>{
+    const text = l.textContent.toLowerCase();
+    l.classList.toggle('hidden', q.length>0 && !text.includes(q));
+  });
+  document.querySelectorAll('.navgroup').forEach(g=>{
+    const anyVisible = Array.from(g.querySelectorAll('.navlink')).some(l=>!l.classList.contains('hidden'));
+    g.classList.toggle('hidden', q.length>0 && !anyVisible);
+  });
+}
+
+// copy buttons for code blocks
+document.querySelectorAll('pre').forEach(pre=>{
+  const btn = document.createElement('button');
+  btn.className='copy-btn'; btn.textContent='Copiar';
+  btn.onclick=()=>{ navigator.clipboard.writeText(pre.innerText); btn.textContent='Copiado!'; setTimeout(()=>btn.textContent='Copiar',1500); };
+  pre.appendChild(btn);
+});
+
+setActive('visao-geral');
+
+// ---- Diagrama em tela cheia (drilldown) ----
+let diagramZoomLevel = 1;
+let modalSvgEl = null;
+let modalNaturalW = 800;
+let modalNaturalH = 500;
+
+function setupDiagramExpand(){
+  document.querySelectorAll('.mermaid').forEach(el=>{
+    if(el.dataset.expandReady) return;
+    el.dataset.expandReady = '1';
+    const hint = document.createElement('div');
+    hint.className = 'diagram-expand-hint';
+    hint.textContent = '⤢ Tela cheia';
+    el.appendChild(hint);
+    el.addEventListener('click', ()=> openDiagramModal(el));
+  });
+}
+
+function computeFitZoom(){
+  const body = document.getElementById('diagramModalBody');
+  const availW = body.clientWidth - 80;
+  const availH = body.clientHeight - 80;
+  const fit = Math.min(availW / modalNaturalW, availH / modalNaturalH);
+  return Math.min(1.6, Math.max(0.35, fit));
+}
+
+function openDiagramModal(container){
+  const svg = container.querySelector('svg');
+  if(!svg) return;
+  const body = document.getElementById('diagramModalBody');
+  body.innerHTML = '';
+  const clone = svg.cloneNode(true);
+  clone.removeAttribute('style');
+  clone.removeAttribute('width');
+  clone.removeAttribute('height');
+  modalNaturalW = 800; modalNaturalH = 500;
+  const vb = svg.getAttribute('viewBox');
+  if(vb){
+    const parts = vb.split(/\s+/).map(Number);
+    if(parts.length===4 && parts[2]>0 && parts[3]>0){
+      modalNaturalW = parts[2];
+      modalNaturalH = parts[3];
+    }
+  }
+  clone.style.width = modalNaturalW + 'px';
+  clone.style.height = modalNaturalH + 'px';
+  modalSvgEl = clone;
+  body.appendChild(clone);
+  document.getElementById('diagramModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(()=>{
+    diagramZoomLevel = computeFitZoom();
+    applyDiagramZoom();
+    body.scrollLeft = 0; body.scrollTop = 0;
+  });
+}
+
+function applyDiagramZoom(){
+  if(!modalSvgEl) return;
+  modalSvgEl.style.transformOrigin = '0 0';
+  modalSvgEl.style.transform = 'scale(' + diagramZoomLevel + ')';
+  document.getElementById('zoomLevel').textContent = Math.round(diagramZoomLevel*100) + '%';
+}
+
+function diagramZoomBy(delta){
+  diagramZoomLevel = Math.min(4, Math.max(0.25, diagramZoomLevel + delta));
+  applyDiagramZoom();
+}
+
+function diagramZoomReset(){
+  diagramZoomLevel = computeFitZoom();
+  applyDiagramZoom();
+  const b = document.getElementById('diagramModalBody');
+  b.scrollLeft = 0; b.scrollTop = 0;
+}
+
+function closeDiagramModal(){
+  document.getElementById('diagramModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('diagramModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'diagramModal') closeDiagramModal();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeDiagramModal();
+});
+
+(function(){
+  const body = document.getElementById('diagramModalBody');
+  let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
+  body.addEventListener('mousedown',(e)=>{
+    isDown=true; body.classList.add('grabbing');
+    startX = e.pageX; startY = e.pageY;
+    scrollLeft = body.scrollLeft; scrollTop = body.scrollTop;
+  });
+  window.addEventListener('mouseup', ()=>{ isDown=false; body.classList.remove('grabbing'); });
+  body.addEventListener('mousemove',(e)=>{
+    if(!isDown) return;
+    e.preventDefault();
+    body.scrollLeft = scrollLeft - (e.pageX - startX);
+    body.scrollTop = scrollTop - (e.pageY - startY);
+  });
+  body.addEventListener('wheel',(e)=>{
+    if(e.ctrlKey || e.metaKey){
+      e.preventDefault();
+      diagramZoomBy(e.deltaY < 0 ? 0.15 : -0.15);
+    }
+  }, {passive:false});
+})();
+</script>
+</body>
+</html>
